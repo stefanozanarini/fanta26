@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Listone fanta a 12 con mod</title>
+<style>
+  :root{
+    --paper:#F4F0E6;
+    --ink:#1C231F;
+    --ink-soft:#5B6259;
+    --line:#D8D1BE;
+    --gold:#C7962C;
+    --p-color:#C7622C;
+    --d-color:#2B6E4F;
+    --c-color:#2B3A67;
+    --a-color:#A02334;
+    --white:#FFFDF8;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Helvetica Neue', Arial, sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .wrap{max-width:980px;margin:0 auto;padding:28px 20px 80px;}
+
+  /* Lock screen */
+  #lockScreen{
+    position:fixed;
+    inset:0;
+    background:var(--paper);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:1000;
+    padding:20px;
+  }
+  .lock-card{
+    background:var(--white);
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:32px 28px;
+    max-width:320px;
+    width:100%;
+    text-align:center;
+    box-shadow:0 4px 24px rgba(0,0,0,0.06);
+  }
+  .lock-card h2{
+    margin:0 0 6px;
+    font-size:1.15rem;
+    font-weight:800;
+  }
+  .lock-card p{
+    margin:0 0 18px;
+    font-size:0.82rem;
+    color:var(--ink-soft);
+  }
+  .lock-card input{
+    width:100%;
+    padding:9px 12px;
+    border:1px solid var(--line);
+    border-radius:4px;
+    font-size:0.95rem;
+    text-align:center;
+    letter-spacing:0.06em;
+    margin-bottom:12px;
+    font-family:inherit;
+    background:var(--paper);
+    color:var(--ink);
+  }
+  .lock-card input:focus{outline:none;border-color:var(--ink);}
+  .lock-card button{
+    width:100%;
+    padding:9px 12px;
+    border:none;
+    border-radius:4px;
+    background:var(--ink);
+    color:var(--white);
+    font-size:0.88rem;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .lock-card button:hover{opacity:0.9;}
+  .lock-error{
+    color:var(--a-color);
+    font-size:0.78rem;
+    margin-top:10px;
+    min-height:1em;
+  }
+  body.locked .wrap{display:none;}
+
+  header.top{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    border-bottom:3px solid var(--ink);
+    padding-bottom:14px;
+    margin-bottom:22px;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  header.top h1{
+    font-size:1.7rem;
+    margin:0;
+    font-weight:800;
+    letter-spacing:-0.01em;
+  }
+  header.top .season{
+    font-size:0.85rem;
+    color:var(--ink-soft);
+    font-variant-numeric:tabular-nums;
+  }
+
+  /* Team grid */
+  .team-panel{margin-bottom:18px;}
+  .panel-label{
+    font-size:0.72rem;
+    color:var(--ink-soft);
+    margin-bottom:8px;
+    font-weight:600;
+  }
+  .team-grid{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+  }
+  .team-chip{
+    border:1px solid var(--line);
+    background:var(--white);
+    color:var(--ink);
+    padding:6px 12px;
+    font-size:0.82rem;
+    border-radius:3px;
+    cursor:pointer;
+    font-weight:500;
+    transition:background .12s, border-color .12s, color .12s;
+    line-height:1.2;
+  }
+  .team-chip:hover{border-color:var(--ink);}
+  .team-chip.active{
+    background:var(--ink);
+    border-color:var(--ink);
+    color:var(--white);
+  }
+  .team-chip.all-chip{font-weight:700;}
+
+  /* Controls row: role tabs + search + sort */
+  .controls{
+    display:flex;
+    align-items:center;
+    gap:16px;
+    flex-wrap:wrap;
+    margin:20px 0 14px;
+    padding-top:16px;
+    border-top:1px solid var(--line);
+  }
+  .role-tabs{display:flex;gap:4px;}
+  .role-tab{
+    border:1px solid var(--line);
+    background:var(--white);
+    padding:6px 10px;
+    font-size:0.78rem;
+    font-weight:700;
+    cursor:pointer;
+    border-radius:3px;
+    color:var(--ink-soft);
+  }
+  .role-tab[data-role="P"].active{background:var(--p-color);border-color:var(--p-color);color:var(--white);}
+  .role-tab[data-role="D"].active{background:var(--d-color);border-color:var(--d-color);color:var(--white);}
+  .role-tab[data-role="C"].active{background:var(--c-color);border-color:var(--c-color);color:var(--white);}
+  .role-tab[data-role="A"].active{background:var(--a-color);border-color:var(--a-color);color:var(--white);}
+  .role-tab.all-role.active{background:var(--ink);border-color:var(--ink);color:var(--white);}
+
+  .search-box{
+    flex:1;
+    min-width:160px;
+  }
+  .search-box input{
+    width:100%;
+    padding:7px 10px;
+    border:1px solid var(--line);
+    border-radius:3px;
+    background:var(--white);
+    font-size:0.85rem;
+    color:var(--ink);
+    font-family:inherit;
+  }
+  .search-box input:focus{outline:none;border-color:var(--ink);}
+
+  .count{
+    font-size:0.78rem;
+    color:var(--ink-soft);
+    white-space:nowrap;
+    font-variant-numeric:tabular-nums;
+  }
+
+  /* Table */
+  table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:0.88rem;
+  }
+  thead th{
+    text-align:left;
+    padding:8px 10px;
+    border-bottom:2px solid var(--ink);
+    font-size:0.7rem;
+    letter-spacing:0.02em;
+    color:var(--ink-soft);
+    cursor:pointer;
+    user-select:none;
+    white-space:nowrap;
+  }
+  thead th.num{text-align:right;}
+  thead th:hover{color:var(--ink);}
+  thead th .arrow{font-size:0.65rem;margin-left:3px;opacity:0.6;}
+
+  tbody tr{border-bottom:1px solid var(--line);}
+  tbody tr:hover{background:rgba(0,0,0,0.03);}
+  tbody td{padding:8px 10px;vertical-align:middle;}
+  tbody td.num{text-align:right;font-variant-numeric:tabular-nums;}
+
+  .role-badge{
+    display:inline-block;
+    width:22px;
+    height:22px;
+    line-height:22px;
+    text-align:center;
+    border-radius:3px;
+    font-size:0.72rem;
+    font-weight:800;
+    color:var(--white);
+  }
+  .role-badge.P{background:var(--p-color);}
+  .role-badge.D{background:var(--d-color);}
+  .role-badge.C{background:var(--c-color);}
+  .role-badge.A{background:var(--a-color);}
+
+  .player-name{font-weight:700;}
+  .team-name{color:var(--ink-soft);font-size:0.82rem;}
+
+  .tit-bar-wrap{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    justify-content:flex-end;
+  }
+  .tit-bar{
+    width:46px;
+    height:6px;
+    background:var(--line);
+    border-radius:3px;
+    overflow:hidden;
+  }
+  .tit-bar-fill{
+    height:100%;
+    background:var(--gold);
+  }
+  .tit-num{font-size:0.8rem;width:28px;text-align:right;}
+
+  .info-cell{text-align:center;width:30px;}
+  .info-btn{
+    width:22px;
+    height:22px;
+    border:1px solid var(--line);
+    background:var(--white);
+    border-radius:50%;
+    color:var(--ink-soft);
+    font-size:0.72rem;
+    font-weight:700;
+    cursor:pointer;
+    line-height:1;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    transition:background .12s, color .12s, transform .12s;
+  }
+  .info-btn:hover{background:var(--ink);color:var(--white);border-color:var(--ink);}
+  .info-btn.open{background:var(--ink);color:var(--white);border-color:var(--ink);transform:rotate(45deg);}
+  .info-placeholder{
+    width:22px;height:22px;display:inline-block;
+  }
+
+  tr.player-row{cursor:default;}
+  tr.player-row.has-comment{cursor:pointer;}
+
+  tr.detail-row td{
+    padding:0 10px 14px 10px;
+    border-bottom:1px solid var(--line);
+    background:rgba(0,0,0,0.02);
+  }
+  .comment-box{
+    border-left:3px solid var(--gold);
+    padding:8px 12px;
+    font-size:0.85rem;
+    line-height:1.5;
+    color:var(--ink);
+    background:var(--white);
+    border-radius:0 3px 3px 0;
+    max-width:720px;
+  }
+
+  .empty-state{
+    text-align:center;
+    padding:60px 20px;
+    color:var(--ink-soft);
+    font-size:0.9rem;
+  }
+
+  @media (max-width:600px){
+    header.top h1{font-size:1.3rem;}
+    table{font-size:0.78rem;}
+    thead th, tbody td{padding:6px 6px;}
+    .tit-bar{width:30px;}
+  }
+</style>
+</head>
+<body class="locked">
+
+<div id="lockScreen">
+  <div class="lock-card">
+    <h2>Accesso riservato</h2>
+    <p>Inserisci la password per aprire il listone.</p>
+    <form id="lockForm">
+      <input type="password" id="lockInput" placeholder="Password" autocomplete="off" autofocus>
+      <button type="submit">Entra</button>
+      <div class="lock-error" id="lockError"></div>
+    </form>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <header class="top">
+    <h1>Listone fanta a 12 con mod</h1>
+    <div class="season">Stagione 2026/27</div>
+  </header>
+
+  <div class="team-panel">
+    <div class="panel-label">SQUADRA</div>
+    <div class="team-grid" id="teamGrid"></div>
+  </div>
+
+  <div class="controls">
+    <div class="role-tabs" id="roleTabs">
+      <button class="role-tab all-role active" data-role="ALL">Tutti</button>
+      <button class="role-tab" data-role="P">P</button>
+      <button class="role-tab" data-role="D">D</button>
+      <button class="role-tab" data-role="C">C</button>
+      <button class="role-tab" data-role="A">A</button>
+    </div>
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="Cerca calciatore…">
+    </div>
+    <div class="count" id="countLabel"></div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th data-key="role">R<span class="arrow"></span></th>
+        <th data-key="name">Nome<span class="arrow"></span></th>
+        <th data-key="team">Squadra<span class="arrow"></span></th>
+        <th class="num" data-key="pma">PMA<span class="arrow"></span></th>
+        <th class="num" data-key="pfc">PMF<span class="arrow"></span></th>
+        <th class="num" data-key="tit">Titolarità<span class="arrow"></span></th>
+        <th class="info-cell"></th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+  <div class="empty-state" id="emptyState" style="display:none;">Nessun calciatore trovato.</div>
+
+</div>
+
+<script>
+const PLAYERS = [{"name":"ADOPO","team":"Cagliari","role":"C","pma":1.65,"pfc":0.5,"tit":92,"comment":""},{"name":"BALDANZI","team":"Genoa","role":"C","pma":14.8,"pfc":10.85,"tit":88,"comment":"Il Genoa ha deciso di riscattarlo dalla Roma perché De Rossi crede nelle sue qualità. Listato centrocampista ma gioca o nei due dietro la punta o da seconda punta. Ottimo terzo/quarto slot."},{"name":"BARELLA","team":"Inter","role":"C","pma":36.1,"pfc":34.55,"tit":92,"comment":"Sempre presente, non sempre al meglio però quest'anno. Nonostante tutto ha segnato 3 gol e fornito 8 assist. Alle giuste cifre è un ottimo secondo/terzo slot."},{"name":"BASTONI","team":"Inter","role":"D","pma":30.6,"pfc":36.95,"tit":92,"comment":"Ha avuto un'annata travagliata da episodi che lo hanno messo al centro di diverse discussioni. Prima per il caso Kalulu e poi per il rosso in Nazionale. Voi dimenticate tutto, è uno dei migliori difensori della Serie A e non ci sono chiacchiere che tengono."},{"name":"BELLANOVA","team":"Atalanta","role":"D","pma":7.3,"pfc":5.7,"tit":82,"comment":""},{"name":"BIRAGHI","team":"Torino","role":"D","pma":1.2,"pfc":0.5,"tit":52,"comment":""},{"name":"BREMER","team":"Juventus","role":"D","pma":34.9,"pfc":42.85,"tit":92,"comment":"Quando sta bene è dominante e non teme il confronto con nessuno. Difensore forte in marcatura e sulle palle alte. In zona offensiva, sugli sviluppi dei piazzati, è sempre tra i più pericolosi. Occhio solo agli infortuni, non strapagatelo."},{"name":"BUONGIORNO","team":"Napoli","role":"D","pma":3.15,"pfc":0.55,"tit":74,"comment":"Buongiorno sì è operato al ginocchio e dovrebbe tornare disponibile nel giro di 3/4 mesi. Si possono fare altre scelte al fanta."},{"name":"CABAL","team":"Juventus","role":"D","pma":1,"pfc":0.5,"tit":67,"comment":""},{"name":"CALHANOGLU","team":"Inter","role":"C","pma":78.85,"pfc":74.8,"tit":88,"comment":"Imprescindibile nel centrocampo nerazzurro e rigorista infallibile. Non serve aggiungere altro. Top di reparto."},{"name":"CAMBIAGHI","team":"Bologna","role":"C","pma":5.4,"pfc":6,"tit":88,"comment":"Listato C diventa interessante, anche se comunque parte dietro nelle gerarchie."},{"name":"CAMBIASO","team":"Juventus","role":"D","pma":13.55,"pfc":24.5,"tit":84,"comment":"Non bisogna fare l'errore di considerarlo ancora un top di reparto, purtroppo nelle ultime stagioni ha un po deluso. È sicuramente un buon acquisto, però pagato a cifre nettamente più basse rispetto alle ultime stagioni. Poi se dovesse tornare ai suoi livelli ben venga."},{"name":"CANCELLIERI","team":"Lazio","role":"C","pma":4.15,"pfc":0.5,"tit":60,"comment":""},{"name":"CARLOS AUGUSTO","team":"Inter","role":"D","pma":6.25,"pfc":8.55,"tit":80,"comment":"La duttilità è il suo forte. Parte dietro nelle gerarchie, ma può essere utilizzato sia come vice Dimarco che come vice Bastoni. Per gli ultimi slot può risultare prezioso."},{"name":"CARNESECCHI","team":"Atalanta","role":"P","pma":51.15,"pfc":41.8,"tit":91,"comment":"Uno dei migliori portieri della scorsa stagione. Una vera e propria certezza sia per l'Atalanta che per i suoi fantallenatori. Sarà da capire con Sarri come reagirà la squadra essendo abituata a un altro assetto tattico, ma crediamo che le sue qualità siano fuori discussione."},{"name":"CASALE","team":"Bologna","role":"D","pma":1.15,"pfc":0.5,"tit":51,"comment":""},{"name":"CATALDI","team":"Lazio","role":"C","pma":1.2,"pfc":0.5,"tit":72,"comment":""},{"name":"CELIK","team":"Juventus","role":"D","pma":11.1,"pfc":10.15,"tit":83,"comment":"Parte dietro nelle gerarchie, ma avrà spazio. La doppia competizione porta tanto dispendio di energie e ci sarà bisogno di tutti. Lo scorso anno ha disputato una buona stagione e Massara ha deciso di portarlo con sé in bianconero."},{"name":"COLOMBO","team":"Genoa","role":"A","pma":36.25,"pfc":44.2,"tit":92,"comment":"Fisico e di posizione, bravo a giocare spalle alla porta e a fare da boa. Ha un buon fiuto del gol, conclude bene di sinistro e sa liberarsi in area. Non è un attaccante di purezza tecnica elevatissima, ma è efficace, robusto e capace di tenere palla per far salire la squadra. Con De Rossi e il modulo a due punte ha trovato maggiore spazio e continuità realizzativa."},{"name":"CRISTANTE","team":"Roma","role":"C","pma":6.45,"pfc":4.8,"tit":86,"comment":"L’equilibrio e l’esperienza. Sa leggere il gioco, interdire e dare struttura alla mediana. Non è il più spettacolare, ma è fondamentale per l’organizzazione. Ottimo per non rimanere in 10."},{"name":"DE KETELAERE","team":"Atalanta","role":"A","pma":49.15,"pfc":47.05,"tit":90,"comment":"Questo potrebbe essere l'anno della sua definitiva consacrazione. In questa stagione ha segnato poco, ma comunque abbiamo notato che è cresciuto tanto sotto il punto di vista della consapevolezza dei propri mezzi. Annata da doppia cifra? Difficile ma non impossibile."},{"name":"DE ROON","team":"Roma","role":"C","pma":1.95,"pfc":0.5,"tit":80,"comment":"De Roon è stato sempre un perno nell'Atalanta di Gasperini. Per questo il Gasp ha voluto riaverlo anche alla Roma. Sarà un'alternativa funzionale al suo modulo."},{"name":"DE SILVESTRI","team":"Bologna","role":"D","pma":0.95,"pfc":0.5,"tit":52,"comment":""},{"name":"DE WINTER","team":"Milan","role":"D","pma":4.9,"pfc":0.5,"tit":78,"comment":""},{"name":"DI LORENZO","team":"Napoli","role":"D","pma":25.15,"pfc":42.95,"tit":92,"comment":"Il capitano quest'anno potrebbe tornare nel suo ruolo naturale di terzino se Allegri dovesse continuare ad utilizzare il 433. Ottima notizia per i fantallenatori."},{"name":"DIMARCO","team":"Inter","role":"D","pma":72.8,"pfc":117.6,"tit":92,"comment":"Top di reparto, nulla da aggiungere."},{"name":"DYBALA","team":"Roma","role":"A","pma":74.95,"pfc":69.25,"tit":86,"comment":"È il giocatore più talentuoso della rosa e lo sappiamo bene tutti. Altrettanto bene sappiamo che gli infortuni per lui sono molto frequenti. Quando è in campo illumina, il problema è il numero di partite saltate. Occhio a non spendere troppo per lui, perché sulla carta è un Semitop ma nella realtà è più vicino ad una Scommessa."},{"name":"EDERSON D.S.","team":"Atalanta","role":"C","pma":23.3,"pfc":26.05,"tit":92,"comment":"Dopo che è sfumato il suo passaggio al Manchester United, ha deciso di firmare il rinnovo con l'Atalanta. Questo significa che sarà ancora centrale nel progetto e che il nuovo allenatore potrà far uscire ancora di più le sue qualità schierandolo da mezzala."},{"name":"FAGIOLI","team":"Fiorentina","role":"C","pma":2.65,"pfc":3.75,"tit":88,"comment":"Uno dei più positivi dello scorso anno nella Fiorentina. Dovrebbe continuare a svolgere il ruolo di play, ma quest'anno se la vedrà anche con Oulai per il quale Paratici ha deciso di destinare 30 milioni del budget che aveva a disposizione per il mercato."},{"name":"FALCONE","team":"Lecce","role":"P","pma":13.6,"pfc":17.2,"tit":91,"comment":"Garanzia di titolarità certa. Mai assente nelle ultime stagioni. Portiere low cost per eccellenza. Ottimo se preso come terzo slot per completare il reparto formato da un Top/Semitop e relativa riserva."},{"name":"FAZZINI","team":"Cagliari","role":"C","pma":7.85,"pfc":8.9,"tit":90,"comment":"Potrebbe essere un ottimo acquisto al fantacalcio questa stagione. Tanto potenziale e al Cagliari avrà la continuità che gli serve. Come quinto/sesto slot a cifre contenute si può scommettere su di lui."},{"name":"FERGUSON","team":"Bologna","role":"C","pma":3.2,"pfc":1.85,"tit":88,"comment":""},{"name":"FRATTESI","team":"Lazio","role":"C","pma":36.55,"pfc":26.9,"tit":91,"comment":"Vita nuova per Frattesi, che alla Lazio potrebbe tornare a essere un giocatore importante al Fantacalcio. Le sue capacità di inserimento sono fuori dubbio e quindi immaginiamo porterà diversi bonus."},{"name":"GAETANO","team":"Atalanta","role":"C","pma":10.8,"pfc":11.4,"tit":86,"comment":"Nato trequartista, Pisacane lo ha reinventato regista. Proprio da regista ha attirato l'attenzione dell'Atalanta, dove Sarri lo vede perfetto per il suo modulo. Centrocampista che porterà ottimi voti e qualche bonus. Occhio all'hype però, potrebbero farvelo pagare più del dovuto."},{"name":"GALLO","team":"Lecce","role":"D","pma":3.8,"pfc":0.5,"tit":88,"comment":""},{"name":"GATTI","team":"Juventus","role":"D","pma":1.5,"pfc":0.5,"tit":51,"comment":""},{"name":"GILA","team":"Milan","role":"D","pma":22,"pfc":31.4,"tit":92,"comment":"Acquisto fortemente voluto dai rossoneri. Può giocare sia da braccetto di destra che da centrale. Amorim lo ha voluto per la sua visone di gioco e per la sua velocità negli anticipi. Nella Lazio ha dimostrato gli ultimi anni di essere uno dei difensori più affidabili. Bonus pochi, e occhio all'hype che potrebbe alzarne di troppo la valutazione all'asta."},{"name":"GOLLINI","team":"Roma","role":"P","pma":0.95,"pfc":0.5,"tit":20,"comment":""},{"name":"HIEN","team":"Atalanta","role":"D","pma":2.4,"pfc":0.5,"tit":64,"comment":""},{"name":"ILIC","team":"Lecce","role":"C","pma":1.2,"pfc":0.5,"tit":83,"comment":""},{"name":"ISMAJLI","team":"Torino","role":"D","pma":2.05,"pfc":0.5,"tit":64,"comment":""},{"name":"KALULU","team":"Juventus","role":"D","pma":24.35,"pfc":37.7,"tit":92,"comment":"Con Spalletti è tornato nella sua posizione di gioventù, ovvero quella di terzino. Ha collezionato ben 37 presenze, 2 gol e 4 assist. Spesso sottovalutato all'asta, quest'anno non fate questo errore."},{"name":"KEAN","team":"Como","role":"A","pma":109,"pfc":94.45,"tit":84,"comment":"Al termine del mercato si è accasato al Como. Dovrà vedersela con Douvikas e non è scontato che sarà lui il titolare. Avrà sicuramente tanto spazio e l'opportunità di giocare in una squadra super offensiva. All'asta si può prendere ma occhio a pagarlo come se fosse un titolare fisso."},{"name":"KOOPMEINERS","team":"Juventus","role":"C","pma":2.35,"pfc":2.6,"tit":76,"comment":""},{"name":"LAZZARI","team":"Lazio","role":"D","pma":1.1,"pfc":0.5,"tit":64,"comment":""},{"name":"LOBOTKA","team":"Napoli","role":"C","pma":5.25,"pfc":3.85,"tit":88,"comment":""},{"name":"LOCATELLI","team":"Juventus","role":"C","pma":7.4,"pfc":6.65,"tit":92,"comment":"Ogni anno viene messo in discussione e ogni anno però gli allenatori puntano su di lui. Si può dire qualsiasi cosa, ma non che non sia un professionista esemplare. Va comunque acquistato a cifre contenute, perché porta pochissimi bonus."},{"name":"MAIGNAN","team":"Milan","role":"P","pma":52.05,"pfc":43.65,"tit":91,"comment":"Uno dei portieri più forti in Serie A. Lo scorso anno con Allegri, che curava molto la fase difensiva, è riuscito a portarsi a casa parecchi clean sheet. Quest'anno la musica potrebbe cambiare dato che Amorim è un allenatore più votato all'attacco piuttosto che alla fase difensiva. In linea generale è da considerarsi un semitop piuttosto che un top quest'anno."},{"name":"MALDINI","team":"Cagliari","role":"A","pma":13,"pfc":22.6,"tit":86,"comment":"Al Cagliari sarà titolare e giocherà in una piazza che non gli porterà troppe pressioni. Potrebbe trovare un ambiente ideale che lo faccia definitivamente sbocciare."},{"name":"MALEH","team":"Lecce","role":"C","pma":1.2,"pfc":0.5,"tit":52,"comment":""},{"name":"MANCINI","team":"Roma","role":"D","pma":27.95,"pfc":46.9,"tit":92,"comment":"Leader della retroguardia e della Roma in generale. È ormai un veterano tra i giallorossi e con l'allenatore che ha lanciato la sua carriera si è espresso su livelli ancora più alti. Prezioso. Si prende, anche pagandolo un prezzo più alto del previsto (senza fare follie ovviamente)."},{"name":"MANDRAGORA","team":"Torino","role":"C","pma":6.6,"pfc":5.6,"tit":86,"comment":"La scorsa stagione per lui è stata fantastica a livello di bonus: 7 gol e 3 assist. Il ritorno al Torino potrebbe fargli molto bene, anche perché sarà un titolare inamovibile."},{"name":"MARTINEZ L.","team":"Inter","role":"A","pma":188.7,"pfc":169.6,"tit":92,"comment":"Quest'anno si gioca il titolo di attaccante più pagato alle aste con Malen e potrebbe arrivare secondo. Resta comunque un top, per continuità realizzativa, per la squadra dove gioca e perché non molla mai."},{"name":"MARUSIC","team":"Lazio","role":"D","pma":2.75,"pfc":0.5,"tit":79,"comment":""},{"name":"MAZZOCCHI","team":"Venezia","role":"D","pma":1.7,"pfc":0.5,"tit":51,"comment":""},{"name":"MERET","team":"Napoli","role":"P","pma":47.5,"pfc":40.6,"tit":86,"comment":"Allegri sembra aver deciso che quest'anno sarà lui il portiere titolare. Quindi niente più tormentone Meret/ Milinkovic come nella passata stagione. Con Allegri che punta sulla fase difensiva acquisisce ulteriore valore."},{"name":"MESSIAS","team":"Genoa","role":"C","pma":1.15,"pfc":0.5,"tit":64,"comment":""},{"name":"MILINKOVIC-SAVIC V.","team":"Napoli","role":"P","pma":8.4,"pfc":0.5,"tit":20,"comment":""},{"name":"MKHITARYAN","team":"Inter","role":"C","pma":1.75,"pfc":0.5,"tit":60,"comment":""},{"name":"MORO N.","team":"Bologna","role":"C","pma":1.35,"pfc":0.5,"tit":72,"comment":""},{"name":"OLIVERA","team":"Napoli","role":"D","pma":2.15,"pfc":0.5,"tit":60,"comment":""},{"name":"ORSOLINI","team":"Bologna","role":"C","pma":63.6,"pfc":65,"tit":83,"comment":"Il Bologna vuole farne una bandiera e i fantallenatori sperano che quest'anno abbia il minutaggio che merita. Ha comunque segnato 10 gol, anche se ha sbagliato due rigori. Orsolini però non si discute e come sempre è un top del listone."},{"name":"PADELLI","team":"Udinese","role":"P","pma":0.9,"pfc":0.5,"tit":20,"comment":"Portiere che quando è in forma diventa impenetrabile. In questa Udinese così ben strutturata è una buona scelta come terzo slot."},{"name":"PARISI","team":"Fiorentina","role":"D","pma":1.3,"pfc":0.5,"tit":42,"comment":""},{"name":"PASALIC","team":"Atalanta","role":"C","pma":5.3,"pfc":10.25,"tit":76,"comment":"Negli anni ai box di partenza viene sempre visto come una riserva. La realtà dei fatti però dimostra che è un giocatore sempre importante. Dove lo collocherà Sarri? Poco importa, perché lui è un jolly prezioso e come tale dovrete trattarlo all'asta. Niente follie, ma lo scorso hanno ha collezionato 33 presenze segnando 3 gol e fornendo 4 assist. Avrà comunque spazio."},{"name":"PATRIC","team":"Lazio","role":"D","pma":1.35,"pfc":0.5,"tit":49,"comment":""},{"name":"PELLEGRINI LU.","team":"Lazio","role":"D","pma":1.1,"pfc":0.5,"tit":58,"comment":""},{"name":"PICCOLI","team":"Bologna","role":"A","pma":19.85,"pfc":30.05,"tit":88,"comment":"Il Bologna ha speso circa 20 milioni per averlo, quindi crediamo che avrà il suo spazio. Sarà in ballottaggio con Dovbyk, dato che ricoprono lo stesso ruolo e che hanno caratteristiche simili."},{"name":"PINSOGLIO","team":"Juventus","role":"P","pma":0.9,"pfc":0.5,"tit":10,"comment":""},{"name":"POBEGA","team":"Bologna","role":"C","pma":1.35,"pfc":0.5,"tit":80,"comment":""},{"name":"POLITANO","team":"Napoli","role":"C","pma":19.4,"pfc":23.4,"tit":88,"comment":""},{"name":"PONGRACIC","team":"Fiorentina","role":"D","pma":1.15,"pfc":0.5,"tit":68,"comment":""},{"name":"PROVEDEL","team":"Inter","role":"P","pma":7.45,"pfc":9.85,"tit":72,"comment":"Provedel arriva in nerazzurro per essere il vice Martinez. I nerazzurri hanno investito molto su Martinez in passato e ora ritengono sia pronto per il ruolo da titolare. In ogni caso Chivu ha specificato che per lui non c'è un primo e un secondo portiere, quindi prendetelo assolutamente per tutelarvi se avrete acquistato Martinez."},{"name":"RANIERI L.","team":"Fiorentina","role":"D","pma":1.25,"pfc":0.5,"tit":60,"comment":""},{"name":"RASPADORI","team":"Atalanta","role":"A","pma":41.7,"pfc":37.2,"tit":84,"comment":"Quest'anno verrà schierato come esterno sinistro d'attacco. Posizione a lui congeniale, anche perché gli permette di accentrarsi e arrivare al tiro. Ora però è arrivato Rowe e il ballottaggio è aperto. Andrà via a cifre relativamente basse e potrebbe essere un'ottima pedina per completare il reparto. Non avrà la titolarità certa, ma il suo spazio è fuori discussione e i bonus possono arrivare comunque."},{"name":"RICCI S.","team":"Como","role":"C","pma":1.3,"pfc":0.5,"tit":74,"comment":""},{"name":"ROMAGNOLI","team":"Lazio","role":"D","pma":2.3,"pfc":0.5,"tit":52,"comment":""},{"name":"ROVELLA","team":"Lazio","role":"C","pma":1.8,"pfc":0.5,"tit":83,"comment":""},{"name":"RRAHMANI","team":"Napoli","role":"D","pma":24.6,"pfc":39.55,"tit":92,"comment":"Difensore di grande esperienza e di cui Allegri non si priverà assolutamente. Pericoloso sui calci piazzati ed è ormai uno dei punti cardine di questo Napoli. Al Fantacalcio si prende. Secondo slot."},{"name":"SAELEMAEKERS","team":"Milan","role":"C","pma":15.4,"pfc":12.6,"tit":76,"comment":"Sarà un jolly in questa stagione, perché la sua duttilità gli permette di giocare su entrambe le fasce e anche dietro la punta. Con l'arrivo di Moreira e con Amorim che punta molto su Chukwueze potrebbe avere meno spazio rispetto alla passata stagione, ma sarà comunque un giocatore importante."},{"name":"SAMARDZIC","team":"Atalanta","role":"C","pma":24.75,"pfc":23.25,"tit":86,"comment":"Giocatore di grande qualità, che però non è riuscito a esprimersi con continuità. Sarri lo vede come mezzala, questo potrebbe creare grande hype intorno a lui. Occhio a non fare pazzie, perché come abbiamo scritto prima non eccelle in continuità."},{"name":"SCALVINI","team":"Atalanta","role":"D","pma":13.35,"pfc":16.4,"tit":90,"comment":"Il ragazzo purtroppo durante la sua carriera ha subito diversi stop per problemi fisici. Anche se non è potuto essere sempre titolare, nella scorsa stagione ha segnato comunque 3 gol da difensore centrale e fornito 1 assist. Un ottimo titolare quando è in forma."},{"name":"SIMEONE","team":"Torino","role":"A","pma":64.8,"pfc":61.55,"tit":90,"comment":"Il bomber più prolifico del Toro della scorsa stagione. Mobile, cinico e intelligente nei movimenti. Vive di spazi, tagli e finalizzazione: un attaccante moderno e concreto. Al Torino ha trovato la sua dimensione dopo stagione da riserva nel Napoli. Puntateci anche quest'anno."},{"name":"SKORUPSKI","team":"Bologna","role":"P","pma":20.15,"pfc":21.55,"tit":91,"comment":"Dovrebbe essere ancora lui il titolare. Assicura sicuramente esperienza, anche se a volte qualche errorino lo commette. Tedesco gioca un calcio molto offensivo, questo potrebbe portare il Bologna a subire diversi gol. Portiere che va acquistato per pochi crediti."},{"name":"SPINAZZOLA","team":"Napoli","role":"D","pma":13.85,"pfc":26.45,"tit":88,"comment":"Ad Allegri piace affidarsi a giocatori esperti, quindi crediamo che Spinazzola sarà ancora un giocatore importante nel Napoli. Se dovesse essere confermato il 433 per il resto della stagione allora lui potrebbe essere il titolare nel ruolo di terzino, e magari alcune volte da esterno alto per garantire più equilibrio."},{"name":"SPORTIELLO","team":"Atalanta","role":"P","pma":0.95,"pfc":0.5,"tit":20,"comment":""},{"name":"SULEMANA I.","team":"Sassuolo","role":"C","pma":1.2,"pfc":0.5,"tit":52,"comment":""},{"name":"SVILAR","team":"Roma","role":"P","pma":60.7,"pfc":45.25,"tit":91,"comment":"Al vertice della piramide dei portieri della Serie A. Non è solo un “para-tutto”: sa costruire dal basso, distribuire palla e dare sicurezza alla difesa a tre di Gasperini. Leader silenzioso e affidabile. Miglior acquisto possibile in porta."},{"name":"TERRACCIANO","team":"Milan","role":"P","pma":0.9,"pfc":0.5,"tit":10,"comment":""},{"name":"TOMORI","team":"Milan","role":"D","pma":1.4,"pfc":0.5,"tit":52,"comment":""},{"name":"VASQUEZ","team":"Genoa","role":"D","pma":11.05,"pfc":10.25,"tit":92,"comment":"Aggressivo, rapido nei movimenti e solido nei duelli (sia aerei che a terra). Sa giocare sia in una difesa a 3 che a 4, e ha buone qualità nella costruzione dal basso (passaggi corti precisi e conduzione). È un difensore “moderno” che non si limita a distruggere: intercetta, blocca e sa uscire dalla linea quando serve. Personalità, continuità e capacità di trascinare i compagni. Pericoloso sugli sviluppi dei piazzati."},{"name":"VOJVODA","team":"Udinese","role":"D","pma":15.15,"pfc":14.95,"tit":88,"comment":"Ottimo acquisto da parte dell'Udinese. Ha qualità sia nel cross che nel tiro. In una piazza come quella friulana potrebbe rilanciarsi e diventare ancora più importante al Fanta."},{"name":"WALUKIEWICZ","team":"Sassuolo","role":"D","pma":1.3,"pfc":0.5,"tit":49,"comment":"Centrale o braccetto. Fisico, aggressivo e abile nel gioco aereo. Porta intensità e personalità, utile sia in fase difensiva che nelle palle inattive. Da ultimissimi slot a pochi crediti."},{"name":"ZACCAGNI","team":"Lazio","role":"C","pma":46.1,"pfc":46.45,"tit":92,"comment":"È il capitano dei biancocelesti e deve essere il primo a dover dare di più rispetto alla scorsa stagione. La carica da rigorista è in bilico, ma in ogni caso i bonus può e deve portarli. Senza coppe può essere un grande acquisto questa stagione, anche perché in virtù del fatto che lo scorso hanno non ha reso, all'asta potrebbe andare via a cifre inferiori rispetto alle ultime stagioni."},{"name":"ZALEWSKI","team":"Atalanta","role":"C","pma":3.95,"pfc":3.95,"tit":76,"comment":"Sarri per lui ha in mente un ruolo nuovo, ovvero quello di mezzala sinistra. Essendo molto duttile non è detto che a volte non possa anche ricoprire il ruolo di esterno d'attacco. Parte comunque dietro nelle gerarchie. Potete acquistarlo, ma il prezzo deve essere molto contenuto."},{"name":"ZAMBO ANGUISSA","team":"Napoli","role":"C","pma":15.65,"pfc":20.7,"tit":86,"comment":""},{"name":"ZANOLI","team":"Udinese","role":"D","pma":1.4,"pfc":0.5,"tit":48,"comment":""},{"name":"ZAPATA D.","team":"Torino","role":"A","pma":3.3,"pfc":15.3,"tit":72,"comment":""},{"name":"ZAPPACOSTA","team":"Atalanta","role":"D","pma":12.7,"pfc":24.2,"tit":86,"comment":"Con Sarri non sarà più un quinto di centrocampo, ma verrà utilizzato come terzino. Resta un ottimo giocatore, però la propensione al bonus si abbassa. 3 gol e 3 assist lo scorso anno, non è certo che possa riconfermare questi numeri visto anche l'avanzare dell'età."},{"name":"ZIELINSKI","team":"Inter","role":"C","pma":29.95,"pfc":38.55,"tit":86,"comment":"Quando c'è stato bisogno di lui è salito in cattedra e ha dimostrato di essere un campione. Non è un titolare inamovibile, ma al fantacalcio è giusto puntarci. Non va strapagato, ma averlo in rosa ha senso."},{"name":"ZORTEA","team":"Bologna","role":"D","pma":6.2,"pfc":2.15,"tit":84,"comment":"Il passaggio da quinto di centrocampo a terzino arretrato lo ha sofferto e si è visto anche in termini di bonus. Resta comunque un giocatore di grande qualità, che può portarvi sporadicamente bonus. A cifre contenute può essere un buon acquisto."},{"name":"CHUKWUEZE","team":"Milan","role":"C","pma":12.95,"pfc":11.85,"tit":84,"comment":"Tornato dal prestito e Amorim sembra avere l'intenzione di schierarlo come quarto di centrocampo. Non ci fidiamo completamente di lui, dato che in Seri A non è mai riuscito a incidere. Come scommessa a pochissimi crediti può valerne la pena, ma se vedete che a causa dell'hype viene rialzato tanto allora virate su altri obiettivi."},{"name":"THURAM","team":"Inter","role":"A","pma":128.8,"pfc":128.3,"tit":90,"comment":"La scorsa stagione è stato spesso assente a causa degli infortuni, ma quando è stato in forma ha dimostrato di poter fare la differenza in Serie A. Top di reparto anche lui."},{"name":"PULISIC","team":"Milan","role":"C","pma":61.95,"pfc":71.9,"tit":88,"comment":"Nella scorsa stagione è partito fortissimo, poi però il suo rendimento è drasticamente calato a causa degli infortuni. Nel 3421 di Amorim potrebbe giocare molto più vicino alla porta avversaria e quindi tornare a macinare bonus. Molto dipenderà dalla sua tenuta fisica, ma potenzialmente è un top di reparto."},{"name":"GUDMUNDSSON A.","team":"Lazio","role":"C","pma":23.25,"pfc":33.3,"tit":88,"comment":"Alla Lazio potrebbe riscattare le ultime stagioni opache il maglia Viola. Cambiare aria spesso aiuta, soprattutto i giocatori di grande fantasia come lui."},{"name":"MARTINEZ JO.","team":"Inter","role":"P","pma":53.6,"pfc":43,"tit":86,"comment":""},{"name":"LOFTUS-CHEEK","team":"Milan","role":"C","pma":3.75,"pfc":0.5,"tit":72,"comment":"Nuova vita per Loftus o ennesima illusione di inizio stagione? Sembra infatti che Amorim gli darà spazio, ma non ce la sentiamo di consigliarvelo. Potete fare altre scelte."},{"name":"LUCCA","team":"Napoli","role":"A","pma":4.65,"pfc":0.5,"tit":52,"comment":""},{"name":"FOLORUNSHO","team":"Monza","role":"C","pma":2.25,"pfc":0.5,"tit":86,"comment":""},{"name":"BEUKEMA","team":"Napoli","role":"D","pma":2.1,"pfc":0.5,"tit":60,"comment":""},{"name":"CAPRILE","team":"Cagliari","role":"P","pma":14.6,"pfc":12.65,"tit":91,"comment":"Caprile nel Cagliari non è solo il portiere, ma anche il play maker. Le azioni offensive dei sardi partono spesso da lui. Tra i pali quando è in giornata è insuperabile, anche se giocando in una squadra di bassa classifica possono capitare partite storte. In linea di massima però è un ottimo profilo da avere in rosa."},{"name":"N'DICKA","team":"Roma","role":"D","pma":20,"pfc":26.95,"tit":86,"comment":"Stagione pazzesca anche la sua, che ha attirato le attenzioni di tantissimi club. Ma Gasperini è stato chiaro: \"non si tocca\". Al Fanta è un ottimo acquisto. Semitop."},{"name":"DEIOLA","team":"Cagliari","role":"C","pma":1.3,"pfc":0.5,"tit":86,"comment":""},{"name":"FABBIAN","team":"Parma","role":"C","pma":2.2,"pfc":4.5,"tit":86,"comment":""},{"name":"BISSECK","team":"Inter","role":"D","pma":20.15,"pfc":32.7,"tit":88,"comment":"È cresciuto molto nell'ultima stagione, diventando un giocatore importante per i nerazzurri. Oltre alle sue capacità difensive, gli va riconosciuta una certa pericolosità in zona offensiva."},{"name":"FRENDRUP","team":"Genoa","role":"C","pma":2.8,"pfc":0.5,"tit":78,"comment":"Box-to-box puro, con una grande energia e un’intensità difensiva alta. È specialista nei contrasti e nei recuperi palla (spesso tra i primi in Serie A per tackle e intercetti), legge benissimo le seconde palle e ha un tempismo eccellente. Dinamico e duttile, può giocare in diverse posizioni. Non porta tanti bonus, ma se cercate un centrocampista da buoni voti a basso costo può fare al caso vostro."},{"name":"KAMARA H.","team":"Udinese","role":"D","pma":9.3,"pfc":1.55,"tit":86,"comment":""},{"name":"KOLASINAC","team":"Atalanta","role":"D","pma":1.95,"pfc":0.5,"tit":76,"comment":"Kolasinac oltre a non essere un titolare fisso, essendo sempre stato utilizzato da braccetto bisognerà capire come deciderà di utilizzarlo Sarri. Al fantacalcio però potete fare altre scelte per essere più coperti in difesa. Evitabile."},{"name":"GINEITIS","team":"Torino","role":"C","pma":1.05,"pfc":0.5,"tit":80,"comment":""},{"name":"OBERT","team":"Cagliari","role":"D","pma":3.95,"pfc":0.5,"tit":86,"comment":"Acquisto da ultimi slot. Anche se è difensore e gioca da quinto di centrocampo, non possiamo chiamarlo bug. La propensione al bonus è troppo bassa."},{"name":"SABELLI","team":"Genoa","role":"D","pma":1.05,"pfc":0.5,"tit":60,"comment":""},{"name":"ZARRAGA","team":"Udinese","role":"C","pma":0.9,"pfc":0.5,"tit":52,"comment":""},{"name":"KABASELE","team":"Udinese","role":"D","pma":2.65,"pfc":0.5,"tit":84,"comment":""},{"name":"SOMMARIVA","team":"Genoa","role":"P","pma":0.9,"pfc":0.5,"tit":10,"comment":""},{"name":"SCAMACCA","team":"Atalanta","role":"A","pma":79.65,"pfc":80.85,"tit":86,"comment":"Se sta bene il titolare è lui. Purtroppo nelle ultime stagioni ci ha abituati a un rendimento altalenante dovuto agli infortuni. Tecnicamente non si discute e con Sarri potrebbe fare davvero il salto di qualità. Infortuni permettendo potrebbe essere una grande stagione per lui."},{"name":"MUSAH","team":"Milan","role":"C","pma":1.35,"pfc":0.5,"tit":86,"comment":""},{"name":"MINA","team":"Cagliari","role":"D","pma":6.65,"pfc":4.25,"tit":84,"comment":""},{"name":"VLASIC","team":"Torino","role":"C","pma":37.45,"pfc":44.9,"tit":92,"comment":"Il cervello offensivo. Trequartista/mezzala di classe, tecnico e decisivo. Ama inventare, calciare da fuori e arrivare in zona gol. È uno dei giocatori più importanti, oltre che essere il rigorista."},{"name":"MCKENNIE","team":"Juventus","role":"C","pma":30.05,"pfc":30.75,"tit":84,"comment":"Altro giocatore spesso sottovalutato all'asta, che però poi riesce sempre a ritagliarsi il suo spazio e a portare bonus. Spalletti ha saputo utilizzarlo al meglio e all'asta di riparazione di gennaio è stato uno dei pezzi pregiati."},{"name":"CONTINI","team":"Napoli","role":"P","pma":0.9,"pfc":0.5,"tit":10,"comment":""},{"name":"ISAKSEN","team":"Lazio","role":"C","pma":10.6,"pfc":10.2,"tit":84,"comment":""},{"name":"KABA","team":"Lecce","role":"C","pma":0.95,"pfc":0.5,"tit":56,"comment":""},{"name":"YILDIZ","team":"Juventus","role":"A","pma":47.95,"pfc":50.05,"tit":69,"comment":"È il numero 10 dei bianconeri, l'uomo da cui ripartire per provare a raggiungere gli obiettivi a cui ambisce la società. Tecnica di alto livello e superiore a tutta la rosa della Juventus. La passata stagione ha segnato 10 gol e fornito 6 assist. Numeri importanti. Ora però dovrà stare fuori parecchio tempo a causa di una frattura del quinto metatarso. Occhio a non pagarlo come un top, altrimenti rimarrete corti in attacco."},{"name":"KRSTOVIC","team":"Atalanta","role":"A","pma":57.7,"pfc":60.5,"tit":84,"comment":"È ballottaggio aperto tra lui e Scamacca, ma crediamo che l'attaccante italiano se è in forma possa essere l'attaccante titolare. Krstovic avrà comunque tantissimo spazio, anche perché Scamacca a causa dei numerosi guai fisici non assicura la presenza in maniera continua. Anche da subentrante può portarvi diversi bonus. Alle giuste cifre può essere un affare."},{"name":"OKOYE","team":"Udinese","role":"P","pma":21.45,"pfc":20.1,"tit":91,"comment":""},{"name":"KRISTENSEN T.","team":"Atalanta","role":"D","pma":8.6,"pfc":9.65,"tit":84,"comment":""},{"name":"MANDAS","team":"Lazio","role":"P","pma":27.3,"pfc":24.35,"tit":80,"comment":"È tornato dal prestito e Provedel è andato via. Il ruolo da titolare a oggi è il suo. Nelle sue stagioni passate alla Lazio ha spesso dimostrato di essere un portiere affidabile, molto però dipenderà da come verrà costruita la squadra. Eventuali defezioni nei vari reparti potrebbero influire negativamente anche sulle sue prestazioni."},{"name":"DAVIS K.","team":"Udinese","role":"A","pma":77.9,"pfc":74.8,"tit":92,"comment":"Il centravanti di riferimento. Fisico, abile nel gioco aereo e nel tenere palla. Sa finalizzare e far salire la squadra: è stato tra i migliori realizzatori della scorsa stagione. Secondo slot."},{"name":"HOLM","team":"Bologna","role":"D","pma":2.1,"pfc":8.5,"tit":88,"comment":""},{"name":"VITINHA O.","team":"Genoa","role":"A","pma":12.1,"pfc":20.9,"tit":92,"comment":"Mobile, veloce e abile nell’uno contro uno. Non è una punta classica da area di rigore: ama svariare, creare spazi, dribblare e legare il gioco. Ha un buon tiro (anche da lontano) e sa fare da sponda o da falso nueve."},{"name":"NOSLIN","team":"Lazio","role":"A","pma":2.35,"pfc":5.8,"tit":72,"comment":""},{"name":"ODGAARD","team":"Bologna","role":"C","pma":4.95,"pfc":11.15,"tit":88,"comment":"Ha già dimostrato di essere un giocatore importante. Ha le qualità giuste per il ruolo di mezzala o di trequartista, ha solo bisogno di avere più continuità. Speriamo che sotto questo aspetto Tedesco gli dia la possibilità di giocare più match possibili partendo dall'inizio."},{"name":"PIEROTTI","team":"Lecce","role":"C","pma":2.1,"pfc":3.95,"tit":92,"comment":"Anche se gioca più avanti ed è listato centrocampista, non ce la sentiamo di indicarlo come bug del listone. Il Lecce spesso si trova a soffrire e lui anche se ha qualità fatica ad esprimersi con continuità. Come sesto/settimo slot ci può stare acquistarlo."},{"name":"VALERI","team":"Parma","role":"D","pma":11,"pfc":13.8,"tit":92,"comment":"Esterno di qualità e di spinta. Piede educato che sforna cross pericolosi e calci piazzati precisi per i compagni. Listato da difensore è una buona arma al fanta a cifre contenute."},{"name":"CASTRO S.","team":"Roma","role":"A","pma":29.3,"pfc":40.4,"tit":80,"comment":""},{"name":"GABBIA","team":"Milan","role":"D","pma":4.6,"pfc":0.6,"tit":84,"comment":""},{"name":"BELAHYANE","team":"Lazio","role":"C","pma":0.85,"pfc":0.5,"tit":52,"comment":""},{"name":"CAMARDA","team":"Milan","role":"A","pma":2.95,"pfc":0.5,"tit":71,"comment":""},{"name":"COMUZZO","team":"Torino","role":"D","pma":5.4,"pfc":6.75,"tit":90,"comment":""},{"name":"DOUGLAS LUIZ","team":"Juventus","role":"C","pma":7.3,"pfc":0.5,"tit":76,"comment":""},{"name":"ADAMS C.","team":"Torino","role":"A","pma":12.9,"pfc":18.9,"tit":82,"comment":""},{"name":"CUTRONE","team":"Monza","role":"A","pma":8.25,"pfc":20.85,"tit":86,"comment":"Classico numero 9 con fiuto del gol, tempismo e grinta. Bravo di testa e di piede (soprattutto destro), ha un buon senso della posizione e sa attaccare la profondità. Non è un giocatore di purezza tecnica elevatissima, ma è concreto, aggressivo e capace di finalizzare le occasioni. Può essere un buon quarto/quinto slot."},{"name":"DA CUNHA","team":"Como","role":"C","pma":38.25,"pfc":40.15,"tit":92,"comment":"È un Semitop tra i centrocampisti, non ci sono dubbi. Oltre a essere imprescindibile è anche il rigorista del Como."},{"name":"BONNY","team":"Inter","role":"A","pma":14.1,"pfc":21.1,"tit":80,"comment":"La stagione è lunga e le competizioni sono tante, come quinto slot avere Bonny potrebbe essere un'ottima mossa."},{"name":"THURAM K.","team":"Juventus","role":"C","pma":8.6,"pfc":0.5,"tit":48,"comment":""},{"name":"ESPOSITO SE.","team":"Sassuolo","role":"A","pma":27.1,"pfc":25.1,"tit":84,"comment":""},{"name":"TAVARES N.","team":"Lazio","role":"D","pma":8.25,"pfc":12.3,"tit":84,"comment":"Senza infortuni sarebbe un top di reparto e un titolare inamovibile sia nella Lazio che nelle vostre rose. Purtroppo non ha continuità a livello fisico, per questo si può prendere a cifre basse per gli ultimi slot. Quando sta bene è devastante, ma il rischio di averlo poco a disposizione è molto alto."},{"name":"SOHM","team":"Venezia","role":"C","pma":1.3,"pfc":0.5,"tit":76,"comment":""},{"name":"DELE-BASHIRU","team":"Lazio","role":"C","pma":1.15,"pfc":0.5,"tit":72,"comment":""},{"name":"PAVLOVIC","team":"Milan","role":"D","pma":24.4,"pfc":41.8,"tit":92,"comment":"Nella passata stagione è stato uno dei difensori più prolifici in Serie A, collezionando tante ottime prestazioni. Il dubbio che però giocando con una linea difensiva più alta possa creargli problemi esiste. State attenti quindi a valutarlo solamente in base alla passata stagione e esaminate il contesto in cui si troverà quest'anno."},{"name":"MIRANDA J.","team":"Bologna","role":"D","pma":11.65,"pfc":14,"tit":88,"comment":"Terzino molto propositivo, che nel calcio voluto da Tedesco potrebbe essere ancora più propenso al bonus. Nella scorsa stagione 1 gol e 3 assist in 32 partite, ma anche 6 cartellini gialli. Quest'anno però potrebbe davvero essere molto interessante."},{"name":"COCO","team":"Torino","role":"D","pma":4.05,"pfc":0.5,"tit":88,"comment":""},{"name":"DELPRATO","team":"Parma","role":"D","pma":8.95,"pfc":5.5,"tit":92,"comment":"È il capitano. Giocatore affidabile e sempre tra gli ultimi a mollare. Può giocare sia da centrale che da esterno. Cuesta non se ne priva praticamente mai. Ottimo per completare il reparto a cifre basse."},{"name":"GASPAR K.","team":"Lecce","role":"D","pma":2.35,"pfc":0.5,"tit":80,"comment":"Gaspar è un pilastro della difesa del Lecce, spesso è stato infortunato nella passata stagione. Ora però è tornato a disposizione ed è uno slot perfetto dal sesto in giù."},{"name":"ELLERTSSON","team":"Genoa","role":"C","pma":1.5,"pfc":0.9,"tit":86,"comment":""},{"name":"FELICI","team":"Cagliari","role":"C","pma":1.25,"pfc":0.5,"tit":52,"comment":""},{"name":"PALEARI","team":"Torino","role":"P","pma":1.5,"pfc":0.5,"tit":10,"comment":""},{"name":"MARCANDALLI","team":"Genoa","role":"D","pma":5,"pfc":2.3,"tit":92,"comment":""},{"name":"GOLDANIGA","team":"Como","role":"D","pma":0.95,"pfc":0.5,"tit":59,"comment":""},{"name":"GHILARDI","team":"Roma","role":"D","pma":1.55,"pfc":0.5,"tit":52,"comment":"È cresciuto tanto dopo un primo periodo non all'altezza. Ora che venga utilizzato dal primo minuto o come rincalzo, assicura serenità alla retroguardia giallorossa. Se prendere N'Dicka o Mancini allora prendete anche lui."},{"name":"VALENTI","team":"Parma","role":"D","pma":1.3,"pfc":0.5,"tit":60,"comment":""},{"name":"VIGORITO","team":"Como","role":"P","pma":0.9,"pfc":0.5,"tit":10,"comment":""},{"name":"CORVI","team":"Parma","role":"P","pma":4.65,"pfc":10.85,"tit":90,"comment":"Cuesta sembra aver deciso che sarà lui il nuovo titolare per la porta del Parma. Lo scorso anno si è comportato bene quando è stato chiamato in causa. Come terzo slot a pochissimi crediti può essere un buon acquisto, dato che il Parma punta molto sulla fase difensiva."},{"name":"DOVBYK","team":"Bologna","role":"A","pma":40.05,"pfc":41.1,"tit":83,"comment":"Crediamo che in un sistema votato all'attacco e con giocatori di qualità a orbitargli intorno, Dovbyk possa fare una buona stagione. In alcune aste sarà pagato poco a causa dell'ultima stagione deludente, in altre verrà pagato di più perché punteranno sul suo riscatto. La verità potrebbe stare nel mezzo. Buon terzo slot."},{"name":"ZERBIN","team":"Frosinone","role":"C","pma":1.45,"pfc":0.5,"tit":88,"comment":""},{"name":"KARLSTROM","team":"Udinese","role":"C","pma":1.95,"pfc":0.5,"tit":92,"comment":""},{"name":"LIBERALI","team":"Como","role":"C","pma":5.35,"pfc":7.1,"tit":76,"comment":"Il fantasista scuola Milan ha deciso di accasarsi al Como. Sono state tante le squadre a corteggiarlo, ma ha voluto giocare per Fabregas. L'allenatore spagnolo crede molto in lui e gli ha assicurato che avrà il suo spazio."},{"name":"PISILLI","team":"Roma","role":"C","pma":4.55,"pfc":8.65,"tit":80,"comment":"Giovane di prospettiva. Dinamico, tecnico e con buon senso della posizione. Può giocare da mezzala o mediano e porta freschezza e qualità. Sta diventando sempre di più una certezza."},{"name":"EKKELENKAMP","team":"Udinese","role":"C","pma":25.4,"pfc":22.3,"tit":92,"comment":"Mezzala dinamica e completa. Inserisce, recupera e contribuisce in entrambe le fasi. Ha buon senso del gol e qualità tecnica. Ottimo terzo/quarto slot."},{"name":"DE GEA","team":"Fiorentina","role":"P","pma":29.85,"pfc":25.5,"tit":91,"comment":"Sarà ancora lui il titolare della Fiorentina tra i pali. Come tutta la squadra vorrà riscattare la brutta stagione passata. È uno dei leader e crediamo che darà tutto per far tornare la Fiorentina dove merita."},{"name":"MARIANUCCI","team":"Napoli","role":"D","pma":1,"pfc":0.5,"tit":44,"comment":""},{"name":"ALMQVIST","team":"Parma","role":"C","pma":1.35,"pfc":0.5,"tit":60,"comment":""},{"name":"COULIBALY L.","team":"Lecce","role":"C","pma":1.95,"pfc":0.5,"tit":92,"comment":"Uomo imprescindibile per il centrocampo di Di Francesco. Da ultimo slot a un credito per essere sicuri di avere non rimanere in 10, soprattutto in leghe numerose può avere senso come acquisto."},{"name":"TORRIANI","team":"Milan","role":"P","pma":0.9,"pfc":0.5,"tit":20,"comment":""},{"name":"PINAMONTI","team":"Lazio","role":"A","pma":63.3,"pfc":52.4,"tit":86,"comment":"Non il migliore dei bomber, ma i suoi gol a fine anno li porta sempre. Come terzo slot è perfetto."},{"name":"BRESCIANINI","team":"Fiorentina","role":"C","pma":1.35,"pfc":0.5,"tit":52,"comment":""},{"name":"FADERA","team":"Cagliari","role":"C","pma":1.4,"pfc":0.5,"tit":60,"comment":""},{"name":"EKHATOR","team":"Juventus","role":"A","pma":1.5,"pfc":0.5,"tit":52,"comment":""},{"name":"NERES","team":"Napoli","role":"A","pma":9.35,"pfc":23.85,"tit":75,"comment":"Se sta bene ha già fatto vedere quello di cui è capace e di come può trascinare i fantallenatori coi suoi bonus. Giocatore forte, per il quale però non dovrete spendere cifre troppo alte sia per il rischio infortuni sia per la forte concorrenza nel ruolo."},{"name":"TURATI","team":"Sassuolo","role":"P","pma":0.95,"pfc":0.5,"tit":20,"comment":""},{"name":"PAZ N.","team":"Como","role":"C","pma":88.05,"pfc":91.9,"tit":92,"comment":"Nulla da dire. Top di reparto, va preso e pagato anche tanto senza rimorsi. 35 presenze, 12 gol e 6 assist nella passata stagione. Numeri che parlano da soli."},{"name":"PERRONE","team":"Como","role":"C","pma":8.8,"pfc":8.05,"tit":88,"comment":"Giocatore imprescindibile anche lui per Fabregas. 36 presenze, 3 gol e 4 assist nella passata stagione. Per la posizione che ricopre in campo al fantacalcio non va strapagato. È comunque un ottimo acquisto, il terzo slot perfetto per il tuo centrocampo."},{"name":"CONCEICAO","team":"Juventus","role":"C","pma":38.95,"pfc":42.2,"tit":88,"comment":"Avesse più continuità in zona bonus sarebbe un top di reparto. Per un attaccante esterno, 3 gol e 5 assist non sono il massimo. Però crediamo che facendo tutta la preparazione con Spalletti le cose potrebbero cambiare in meglio anche per lui. Listato centrocampista è comunque ottimo."},{"name":"JEAN","team":"Lecce","role":"D","pma":1.95,"pfc":0.5,"tit":52,"comment":""},{"name":"DOMINGUEZ B.","team":"Sassuolo","role":"C","pma":1.35,"pfc":0.5,"tit":78,"comment":""},{"name":"KOSSOUNOU","team":"Atalanta","role":"D","pma":2.95,"pfc":0.5,"tit":72,"comment":""},{"name":"ANJORIN","team":"Torino","role":"C","pma":0.85,"pfc":0.5,"tit":58,"comment":""},{"name":"KEMPF","team":"Como","role":"D","pma":4.1,"pfc":0.5,"tit":76,"comment":"Difensore importantissimo sia per il Como che per noi fantallenatori. 34 presenze, 4 gol, 1 assist. È però arrivato Chalobah e questo per lui significa che non avrà più il posto da titolare assicurato."},{"name":"MCTOMINAY","team":"Napoli","role":"C","pma":78.15,"pfc":64.8,"tit":81,"comment":"McTominay con Allegri potrebbe fare un ulteriore salto di qualità. Infatti l'allenatore concede tanta libertà d'interpretazione ai suoi giocatori di maggiore qualità. Il paragone con Rabiot non è sbagliato, anche se McTominay ha ancora più propensione al bonus. Anche quest'anno sarà un top di reparto."},{"name":"GILMOUR","team":"Napoli","role":"C","pma":1.15,"pfc":0.5,"tit":56,"comment":""},{"name":"KEITA M.","team":"Parma","role":"C","pma":1.85,"pfc":0.5,"tit":92,"comment":"È un mediano box-to-box di grande intensità. Eccelle nei recuperi, nei contrasti e nelle intercettazioni, ma sa anche portare palla in avanti e coprire tanto campo. I bonus però non sono il suo pane quotidiano, quindi potete prenderlo come sesto/settimo slot per assicurarvi un titolare."},{"name":"ATTA","team":"Fiorentina","role":"C","pma":39.05,"pfc":46.15,"tit":92,"comment":"Sarà la mezzala sinistra titolare di questa Fiorentina e le sue caratteristiche sono perfetto per Grosso. Tempi di inserimento perfetti e grande visione di gioco. Sarà uno dei pezzi pregiati dell'asta di quest'anno."},{"name":"VAN DER BREMPT","team":"Sassuolo","role":"D","pma":1.9,"pfc":0.5,"tit":76,"comment":"Al Sassuolo sarà una pedina importante. Ottimo acquisto a cifre contenute, ma che vi assicurerà il voto e magari anche qualche +1 sporadico."},{"name":"BERISHA M.","team":"Lecce","role":"C","pma":1.6,"pfc":0.85,"tit":88,"comment":"Purtroppo nella passata stagione ha avuto un brutto infortunio che lo ha tenuto a lungo ai box. Quando sarà disponibile allora diventerà una pedina importante per Di Francesco. Si può prendere come ultimo slot da scommessa e attendere che torni in forma al 100%."},{"name":"BASIC","team":"Venezia","role":"C","pma":2.3,"pfc":0.5,"tit":88,"comment":""},{"name":"BARTESAGHI","team":"Milan","role":"D","pma":10.05,"pfc":15.15,"tit":88,"comment":""},{"name":"HAINAUT","team":"Venezia","role":"D","pma":2.15,"pfc":0.5,"tit":88,"comment":""},{"name":"NJIE","team":"Fiorentina","role":"C","pma":3.4,"pfc":6,"tit":80,"comment":""},{"name":"JIMENEZ A.","team":"Fiorentina","role":"D","pma":12.8,"pfc":21.85,"tit":92,"comment":"Potrebbe essere un acquisto davvero molto interessante, dato che Grosso lo vede anche come esterno d'attacco. Un suo difetto è sicuramente il carattere fumoso, che lo porta a rischiare spesso di prendere il giallo, ma ha grande qualità e un anno di Premier League lo ha fatto crescere."},{"name":"DIAO","team":"Como","role":"A","pma":30.15,"pfc":31.4,"tit":92,"comment":"La passata stagione è stato a lungo out a causa dell'infortunio. Solo 17 presenze per lui e tante a partita in corso. Ma ora è pronto e può essere un giocatore importante, anche in virtù del fatto che il Como giocherà la Champions e ci sarà bisogno di rotazioni. Può essere impiegato sia come esterno d'attacco che come falso nueve."},{"name":"SOLET","team":"Udinese","role":"D","pma":26.7,"pfc":36.45,"tit":92,"comment":"Il centrale più importante e di maggior valore della rosa dell'Udinese. Fisico, aggressivo e abile nei duelli aerei e negli anticipi. Porta solidità, intensità e personalità alla difesa a tre. Forte anche in progressione palla al piede e sugli sviluppi da palla inattiva."},{"name":"BUTEZ","team":"Como","role":"P","pma":47.2,"pfc":35.15,"tit":86,"comment":"Nonostante il gioco ultra offensivo di Fabregas la difesa non ne ha risentito, anzi è stata una delle meno battute. Butez si è dimostrato un portiere di alto livello. Occhio però perché il Como ha preso Rob Sanchez, che potrebbe anche scavalcare la gerarchia. Prendeteli in coppia."},{"name":"CAQUERET","team":"Como","role":"C","pma":1.6,"pfc":0.5,"tit":76,"comment":"Quest'anno con il fatto che il Como giocherà la Champions potrebbe avere più spazio. Giocatore di grande qualità che qualche bonus lo porta. Come quinto/sesto slot a cifre modiche può essere un buon acquisto."},{"name":"HELGASON","team":"Venezia","role":"C","pma":1.3,"pfc":0.5,"tit":75,"comment":""},{"name":"MASINI","team":"Frosinone","role":"C","pma":1.3,"pfc":0.5,"tit":84,"comment":""},{"name":"RENSCH","team":"Roma","role":"D","pma":2,"pfc":0.5,"tit":61,"comment":""},{"name":"OTOA","team":"Genoa","role":"D","pma":1.15,"pfc":0.5,"tit":70,"comment":""},{"name":"VEIGA D.","team":"Lecce","role":"D","pma":1.95,"pfc":0.5,"tit":92,"comment":""},{"name":"TIAGO GABRIEL","team":"Lecce","role":"D","pma":8.05,"pfc":0.5,"tit":92,"comment":"Giocatore davvero molto forte, cercato da tanti club italiani e stranieri. Può essere il vostro secondo/terzo slot perfetto, soprattutto se utilizzate il modificatore."},{"name":"CASADEI","team":"Torino","role":"C","pma":9.65,"pfc":8.5,"tit":84,"comment":""},{"name":"N'DRI","team":"Lecce","role":"A","pma":2.6,"pfc":3.5,"tit":84,"comment":""},{"name":"VALLE","team":"Como","role":"D","pma":7.75,"pfc":3.6,"tit":86,"comment":"Quest'anno avrà un competitor importante nella sua posizione, ovvero Kaiki. Non crediamo vi assicuri titolarità certa. Occhio."},{"name":"SMOLCIC I.","team":"Como","role":"D","pma":1.35,"pfc":0.5,"tit":56,"comment":""},{"name":"PROVSTGAARD","team":"Lazio","role":"D","pma":1.85,"pfc":0.5,"tit":76,"comment":""},{"name":"PELLEGRINO M.","team":"Fiorentina","role":"A","pma":37.1,"pfc":35,"tit":86,"comment":""},{"name":"KELLY L.","team":"Juventus","role":"D","pma":4.3,"pfc":0.5,"tit":80,"comment":""},{"name":"NDOUR","team":"Fiorentina","role":"C","pma":5.8,"pfc":9.35,"tit":88,"comment":""},{"name":"DOUVIKAS","team":"Como","role":"A","pma":84.95,"pfc":78.85,"tit":88,"comment":"Arriva da una stagione davvero super. Il prezzo salirà all'asta. Il Como crea tanto e lui sa finalizzare. Anche se non dovesse essere sempre titolare per via della doppia competizione, rimane un ottimo acquisto."},{"name":"HERMOSO","team":"Roma","role":"D","pma":13.1,"pfc":7.95,"tit":88,"comment":"Centrale o braccetto sinistro. Elegante con i piedi, bravo a impostare e a giocare in anticipo. Porta qualità nella costruzione dal basso."},{"name":"RUGANI","team":"Juventus","role":"D","pma":1.05,"pfc":0.5,"tit":52,"comment":""},{"name":"EBOSSE","team":"Udinese","role":"D","pma":1.15,"pfc":0.5,"tit":60,"comment":""},{"name":"VENTURINO","team":"Genoa","role":"C","pma":1.15,"pfc":0.5,"tit":54,"comment":""},{"name":"DE BRUYNE","team":"Napoli","role":"C","pma":44.75,"pfc":53.05,"tit":88,"comment":""},{"name":"LANG","team":"Napoli","role":"A","pma":3.55,"pfc":19.75,"tit":76,"comment":""},{"name":"BERARDI","team":"Sassuolo","role":"A","pma":57.75,"pfc":59.15,"tit":88,"comment":"Il capitano e la stella. Esterno/trequartista di classe, tecnicamente raffinato, visionario e decisivo. Ama accentrarsi, inventare, calciare e creare. Ancora il giocatore più importante e carismatico della squadra. Se sta bene è un secondo slot perfetto, anche perché è il rigorista."},{"name":"SOULÈ","team":"Roma","role":"A","pma":25.2,"pfc":28.15,"tit":78,"comment":""},{"name":"LAURIENTÈ","team":"Sassuolo","role":"A","pma":40.15,"pfc":41.75,"tit":90,"comment":"Ala sinistra rapida e imprevedibile. Veloce, bravo nel dribbling e nel creare superiorità. Fornisce assist e finalizza: uno dei più pericolosi in transizione. Ottimo come terzo/quarto slot."},{"name":"MODRIC","team":"Milan","role":"C","pma":16.2,"pfc":10.95,"tit":88,"comment":"Ha deciso di indossare per un'altra stagione la maglia rossonera, maglia a cui lui ha sempre dichiarato di tenere molto sin da bambino. Nonostante l'età è stato uno dei centrocampisti con il rendimento migliore. Quest'anno potrebbe giocare di meno e dare più spazio alla crescita di Jashari. Averlo in rosa però è sempre un'ottima idea."},{"name":"KONÈ M.","team":"Roma","role":"C","pma":22.1,"pfc":23.25,"tit":92,"comment":"Eccelle nei recuperi, nei contrasti e nelle progressioni palla al piede. Ha buona tecnica sotto pressione e sa dettare i tempi. È il tipico giocatore “box-to-box” che Gasperini ama: intensità, copertura e qualità. Fondamentale. Secondo/terzo slot nonostante i non tantissimi bonus."},{"name":"BERNARDESCHI","team":"Bologna","role":"C","pma":15.8,"pfc":16.95,"tit":86,"comment":"Tedesco lo vede anche come trequartista, ruolo che potrebbe farlo rendere meglio liberandolo da qualche responsabilità difensiva. L'allenatore chiede ai suoi esterni d'attacco grande dinamismo, questo perché vuole una linea di difesa molto alta. Tale dinamismo Bernardeschi da esterno non glielo può garantire, ma ha le qualità tecniche giuste per poter ricoprire la posizione di mezzala e di trequartista. Non parte avanti nelle gerarchi per quel ruolo, ma giocherà molto e potrebbe fare bene."},{"name":"BATURINA","team":"Como","role":"C","pma":58.05,"pfc":50.85,"tit":92,"comment":"Partito in sordina all'inizio della scorsa stagione, ma da gennaio in poi è stato determinante. Quest'anno sarà titolare da subito e verrà pagato abbastanza. Si può puntare forte anche su di lui."},{"name":"ESPOSITO F.P.","team":"Inter","role":"A","pma":75.4,"pfc":64.9,"tit":82,"comment":"Riserva di lusso che quando è stato chiamato in causa ha risposto con gol pesanti. Lo scudetto è arrivato anche grazie ad alcuni dei suoi gol. È la prima alternativa a Lautaro e a Thuram."},{"name":"LUIS HENRIQUE","team":"Inter","role":"C","pma":1.4,"pfc":0.5,"tit":64,"comment":"Spence non è Dumfries e non avrà la titolarità certa al 100%. Questo perché a Chivu piace molto Diouf da quinto. Non è incline al bonus e si rischia di pagarlo molto con una resa non ottimale."},{"name":"ADDAI","team":"Como","role":"C","pma":1.3,"pfc":0.5,"tit":65,"comment":"Giovane interessantissimo acquistato nella passata stagione. Purtroppo ha avuto un infortunio grave al tendine d'Achille. Sarà da capire come recupererà."},{"name":"BERNABÈ","team":"Parma","role":"C","pma":10,"pfc":7.9,"tit":90,"comment":""},{"name":"GIOVANE","team":"Napoli","role":"A","pma":1.45,"pfc":0.5,"tit":52,"comment":""},{"name":"THORSTVEDT","team":"Sassuolo","role":"C","pma":6.55,"pfc":0.5,"tit":60,"comment":"Mezzala box-to-box. Fisico, dinamico e con buon senso del gol. Inserisce, recupera e contribuisce in entrambe le fasi: uno dei più completi della mediana."},{"name":"ESTUPINAN","team":"Milan","role":"D","pma":2,"pfc":0.95,"tit":84,"comment":""},{"name":"BORRELLI","team":"Cagliari","role":"A","pma":1.5,"pfc":0.5,"tit":64,"comment":""},{"name":"DODÒ","team":"Fiorentina","role":"D","pma":5.5,"pfc":0.5,"tit":60,"comment":""},{"name":"WESLEY","team":"Roma","role":"D","pma":45.15,"pfc":65.95,"tit":92,"comment":"Esterno dinamico, che salta l'uomo e non si ferma mai durante la partita. Giocatore imprescindibile per Gasperini. La scorsa stagione l'allenatore è stato costretto a dirottarlo a sinistra e crediamo che in quella posizione renda ancor meglio che in quella sua naturale. Top di reparto."},{"name":"JOAO MARIO","team":"Fiorentina","role":"D","pma":2.85,"pfc":0.5,"tit":72,"comment":""},{"name":"SUCIC P.","team":"Inter","role":"C","pma":9.75,"pfc":5.75,"tit":76,"comment":"La scorsa stagione è stata di ambientamento, ma ha le qualità e la capacità di portare bonus. Anche da subentrante può fare la differenza. L'età dei suoi compagni di reparto avanza e lui dalla sua parte ha la gioventù."},{"name":"VITIK","team":"Bologna","role":"D","pma":1.6,"pfc":0.5,"tit":64,"comment":"Nella passata stagione ha giocato poco e non ha portato bonus. Alcune prestazioni discrete e altre abbastanza negative. Parte dietro nelle gerarchie."},{"name":"BOLOCA","team":"Sassuolo","role":"C","pma":1,"pfc":0.5,"tit":46,"comment":""},{"name":"DOIG","team":"Sassuolo","role":"D","pma":2.2,"pfc":1.95,"tit":88,"comment":""},{"name":"LUCUMÌ","team":"Juventus","role":"D","pma":12.7,"pfc":9.75,"tit":88,"comment":"Sarà il nuovo centrale titolare della Juventus. Farà coppia con Bremer e crediamo che insieme costituiscano un bel tandem difensivo. Giocando in una big il suo valore sale."},{"name":"ABOUKHLAL","team":"Torino","role":"C","pma":1.25,"pfc":0.5,"tit":50,"comment":""},{"name":"BAYO V.","team":"Udinese","role":"A","pma":1,"pfc":0.5,"tit":52,"comment":""},{"name":"ORDONEZ C.","team":"Parma","role":"C","pma":1.2,"pfc":0.5,"tit":88,"comment":""},{"name":"BERTOLA","team":"Udinese","role":"D","pma":1.55,"pfc":0.5,"tit":78,"comment":""},{"name":"SULEMANA K.","team":"Atalanta","role":"A","pma":1.4,"pfc":0.5,"tit":44,"comment":""},{"name":"RODRIGUEZ JE.","team":"Como","role":"C","pma":11.75,"pfc":10.7,"tit":80,"comment":""},{"name":"VOLPATO","team":"Sassuolo","role":"C","pma":5.3,"pfc":1.1,"tit":76,"comment":""},{"name":"KONÈ I.","team":"Sassuolo","role":"C","pma":1.65,"pfc":0.5,"tit":61,"comment":"Lo scorso anno ha fatto innamorare tanti fantallenatori, però quest'anno dovrà stare fuori per parecchi mesi a causa di un brutto infortunio. Potete decidere di prenderlo a pochissimi crediti per ritrovarvelo in rose nella seconda metà della stagione."},{"name":"PESSINA MAS.","team":"Bologna","role":"P","pma":0.9,"pfc":0.5,"tit":20,"comment":""},{"name":"RUSSO A.","team":"Sassuolo","role":"P","pma":0.95,"pfc":0.5,"tit":10,"comment":""},{"name":"IDRISSI R.","team":"Cagliari","role":"D","pma":1.1,"pfc":0.5,"tit":55,"comment":""},{"name":"PIERAGNOLO","team":"Sassuolo","role":"D","pma":1.6,"pfc":0.5,"tit":41,"comment":""},{"name":"LIPANI","team":"Sassuolo","role":"C","pma":1.25,"pfc":0.5,"tit":64,"comment":""},{"name":"FLORIANI MUSSOLINI","team":"Lazio","role":"D","pma":2.6,"pfc":0.5,"tit":76,"comment":""},{"name":"OSTIGARD","team":"Genoa","role":"D","pma":19.6,"pfc":21.7,"tit":92,"comment":"Fisico, dominante nei duelli aerei e molto aggressivo. Ha un ottimo senso del posizionamento e sa colpire di testa anche in fase offensiva. Forte nelle palle inattive e nei contrasti, ha migliorato la gestione della palla sotto pressione. Nell'ultima stagione ha segnato 5 gol."},{"name":"RAMON","team":"Como","role":"D","pma":20.15,"pfc":19.3,"tit":92,"comment":"Il Nico Paz della difesa. Fondamentale per la cavalcata Champions. 32 presenze, 2 gol e tante partite oltre la sufficienza. Vale la pena puntare su di lui anche quest'anno."},{"name":"LEZZERINI","team":"Fiorentina","role":"P","pma":0.85,"pfc":0.5,"tit":10,"comment":""},{"name":"PIOTROWSKI","team":"Udinese","role":"C","pma":1.75,"pfc":0.5,"tit":84,"comment":""},{"name":"LITETA","team":"Cagliari","role":"C","pma":1,"pfc":0.5,"tit":48,"comment":""},{"name":"PALMA","team":"Udinese","role":"D","pma":1.6,"pfc":0.5,"tit":81,"comment":""},{"name":"NDABA","team":"Lecce","role":"D","pma":0.95,"pfc":0.5,"tit":82,"comment":""},{"name":"JASHARI","team":"Milan","role":"C","pma":2.05,"pfc":1.35,"tit":88,"comment":"Nella passata stagione non è riuscito praticamente mai a entrare nelle rotazioni, salvo quando Modric si è dovuto fermare per il colpo subito al volto. La sua esperienza in rossonero è partita in salita. Prima la forte pressione dovuta dal prezzo alto pagato per il cartellino, poi l'infortunio che lo ha tenuto fuori per gran parte dell'inizio della stagione. Quest'anno presumibilmente avrà più spazio, ma resta comunque una riserva e se ci si vuole puntare va trattato come scommessa low cost."},{"name":"NDIAYE","team":"Parma","role":"D","pma":1.05,"pfc":0.5,"tit":52,"comment":""},{"name":"CHRISTENSEN O.","team":"Fiorentina","role":"P","pma":0.9,"pfc":0.5,"tit":20,"comment":""},{"name":"IDZES","team":"Sassuolo","role":"D","pma":4.15,"pfc":0.5,"tit":92,"comment":"Centrale difensivo solido e affidabile. Forte nei duelli aerei e negli anticipi, legge bene le situazioni e dà equilibrio alla linea. È uno dei pilastri della retroguardia. Senza Muharemovic avrà ancora più responsabilità. Buono per completare il reparto dei difensori, da ultimi slot a cifre contenute."},{"name":"MURIC","team":"Sassuolo","role":"P","pma":8.85,"pfc":15.55,"tit":91,"comment":""},{"name":"MILLER L.","team":"Udinese","role":"C","pma":1.1,"pfc":0.5,"tit":80,"comment":""},{"name":"CANDÈ","team":"Sassuolo","role":"D","pma":1.1,"pfc":0.5,"tit":46,"comment":""},{"name":"HEGGEM","team":"Bologna","role":"D","pma":3.75,"pfc":4.9,"tit":88,"comment":"Sarà uno dei titolari della coppia di centrali di difesa. Da capire come si troverà a giocare con la linea difensiva così alta, ma in generale è un buon difensore low cost, dato che viene utilizzato sempre e che sugli sviluppi da calcio piazzato risulta spesso pericoloso."},{"name":"FRIGAN","team":"Parma","role":"A","pma":1.45,"pfc":0.5,"tit":49,"comment":""},{"name":"ADZIC","team":"Sassuolo","role":"C","pma":7.5,"pfc":6.9,"tit":77,"comment":""},{"name":"TROILO","team":"Parma","role":"D","pma":2.4,"pfc":0.5,"tit":92,"comment":""},{"name":"ILKHAN","team":"Torino","role":"C","pma":1.1,"pfc":0.5,"tit":70,"comment":""},{"name":"ROWE","team":"Atalanta","role":"C","pma":30.3,"pfc":35.55,"tit":88,"comment":"Alla fine si è accasato all'Atalanta sotto la guida di Sarri. Crediamo possa fare una grande stagione. Sulla carta il titolare è lui."},{"name":"DIOUF","team":"Inter","role":"C","pma":19.65,"pfc":15.3,"tit":84,"comment":"Chivu pensa che possa ricoprire il ruolo di quinto di centrocampo e a vedere le amichevoli estive non sbaglia. Può essere una bella scommessa, ovviamente senza esagerare e senza farsi trasportare dai gol nella pre season."},{"name":"MATIC","team":"Sassuolo","role":"C","pma":1.65,"pfc":0.5,"tit":90,"comment":""},{"name":"SIEBERT","team":"Lecce","role":"D","pma":1.1,"pfc":0.5,"tit":68,"comment":""},{"name":"STULIC","team":"Lecce","role":"A","pma":2.7,"pfc":14.6,"tit":84,"comment":"Il primo anno di Serie A per lui è stato molto duro per lui, ma sicuramente gli avrà fatto bene per imparare. Va trattato come un quinto/sesto slot a cifre contenute."},{"name":"BELLA-KOTCHAP","team":"Venezia","role":"D","pma":2.8,"pfc":0.5,"tit":92,"comment":"Ha già giocato in Serie A quest'anno con discreti risultati nel Verona. Sara il titolare. Non aspettatevi bonus, né di poterlo schierare in ogni occasione. Sarà un rincalzo nella vostra rosa, che però potrebbe risultare utile in determinati momenti della stagione."},{"name":"BRITSCHGI","team":"Parma","role":"D","pma":1.25,"pfc":0.5,"tit":90,"comment":""},{"name":"ORISTANIO","team":"Torino","role":"C","pma":2.05,"pfc":0.5,"tit":75,"comment":""},{"name":"ZIOLKOWSKI","team":"Monza","role":"D","pma":1.65,"pfc":0.5,"tit":82,"comment":""},{"name":"HOJLUND","team":"Napoli","role":"A","pma":145.9,"pfc":132.25,"tit":92,"comment":"È la punta che Allegri ha tanto voluto, ma che non gli è stata presa lo scorso anno al Milan. Quest'anno ce l'avrà a disposizione ed è perfetto per il suo gioco. Sa far salire la squadra e farsi trovare in area al momento giusto. Quest'anno secondo noi segnerà più dello scorso anno. Primo slot."},{"name":"ZHEGROVA","team":"Juventus","role":"C","pma":2.25,"pfc":0.5,"tit":56,"comment":""},{"name":"RABIOT","team":"Milan","role":"C","pma":48.05,"pfc":41.6,"tit":92,"comment":"Uno dei migliori centrocampisti per rendimento nella passata stagione. Idealmente con Amorim potrebbe portare anche più bonus. È centrale nel progetto e le chiavi del centrocampo sono le sue. Giocatore imprescindibile per il Milan e che va preso anche all'asta."},{"name":"AKANJI","team":"Inter","role":"D","pma":28,"pfc":35.95,"tit":88,"comment":"Leader della retroguardia, ha portato esperienza e cattiveria. I bonus non sono il suo forte, ma porta sempre ottimi voti. Perfetto per il modificatore."},{"name":"ZANIOLO","team":"Udinese","role":"C","pma":33.8,"pfc":37.45,"tit":83,"comment":"Il talento più importante e carismatico. Trequartista/seconda punta di qualità, fisico e tecnico. Ama inventare, dribblare, calciare e arrivare in zona gol. Quando è in giornata è il giocatore più decisivo della squadra. Ha risolto i suoi problemi di contratto col club ed è pronto a ripartire con la maglia dell'Udinese. Secondo slot."},{"name":"GUEYE","team":"Udinese","role":"A","pma":1.35,"pfc":0.5,"tit":60,"comment":""},{"name":"RODRIGUEZ JU.","team":"Cagliari","role":"D","pma":2.25,"pfc":0.5,"tit":88,"comment":""},{"name":"ZÈ PEDRO","team":"Cagliari","role":"D","pma":1.95,"pfc":0.5,"tit":88,"comment":""},{"name":"NICOLUSSI CAVIGLIA","team":"Parma","role":"C","pma":1.55,"pfc":0.5,"tit":74,"comment":""},{"name":"CREMASCHI","team":"Parma","role":"C","pma":1,"pfc":0.5,"tit":51,"comment":""},{"name":"VERGARA","team":"Napoli","role":"C","pma":11.7,"pfc":8.6,"tit":80,"comment":"Il ragazzo ha rinnovato il contratto, segno che il Napoli crede molto in lui. Sono state rispedite al mittente tante offerte arrivate per lui. Allegri lo vede mezzala e vuole provare a utilizzarlo in quel ruolo. Potrebbe essere una mossa interessante e lui una buona scommessa al fanta."},{"name":"KOUADIO","team":"Monza","role":"D","pma":1.25,"pfc":0.5,"tit":65,"comment":""},{"name":"BERNASCONI","team":"Atalanta","role":"D","pma":11.8,"pfc":15.9,"tit":88,"comment":"Bernasconi verrà utilizzato da terzino, ruolo che comunque si addice perfettamente alle sue caratteristiche. Il gioco dispendioso di Sarri per i terzini, ci porta a pensare che lui avrà un ruolo importante vista la freschezza dovuta all'età. Nel primo anno da giocatore importante per la Dea se l'è cavata bene, quest'anno può crescere ulteriormente."},{"name":"TORNQVIST","team":"Monza","role":"P","pma":1.25,"pfc":9.25,"tit":89,"comment":"Sarà lui il titolare tra i pali del Monza in questa stagione."},{"name":"SHERRI","team":"Cagliari","role":"P","pma":0.9,"pfc":0.5,"tit":20,"comment":""},{"name":"TAYLOR K.","team":"Lazio","role":"C","pma":20.55,"pfc":24.1,"tit":92,"comment":"Uno dei migliori acquisti del mercato invernale. Davvero un centrocampista di grande qualità e visione di gioco. I bonus li porta e quest'anno sarà anche più abituato alla Serie A. Titolarità certa, personalità e costanza: si deve prendere. Tra l'altro la Lazio è anche senza coppe e al fanta è un plus."},{"name":"GORTER","team":"Lecce","role":"C","pma":1.1,"pfc":0.5,"tit":84,"comment":""},{"name":"GANDELMAN","team":"Lecce","role":"C","pma":1.35,"pfc":0.5,"tit":72,"comment":"Giocatore di ottimo livello e che ha saputo subito adattarsi alla Serie A pur giocando in una squadra che lottava per non retrocedere."},{"name":"TREPY","team":"Cagliari","role":"A","pma":0.95,"pfc":0.5,"tit":46,"comment":""},{"name":"ARIZALA","team":"Udinese","role":"D","pma":1.4,"pfc":0.5,"tit":68,"comment":""},{"name":"NGOM","team":"Lecce","role":"C","pma":1.25,"pfc":0.5,"tit":80,"comment":""},{"name":"FOFANA SA.","team":"Lecce","role":"C","pma":0.85,"pfc":0.5,"tit":51,"comment":""},{"name":"MALEN","team":"Roma","role":"A","pma":210.55,"pfc":179.25,"tit":92,"comment":"Non è un puro centravanti statico, ma bensì atipico, che attacca i canali, taglia e conclude con grande efficacia. Veloce, tecnico e intelligente nei movimenti: perfetto per le verticalizzazioni e le transizioni di Gasperini. Ha strabiliato tutti da gennaio in poi, riuscirà a ripetersi? Noi crediamo di sì."},{"name":"HELLAND","team":"Bologna","role":"D","pma":1.7,"pfc":0.5,"tit":76,"comment":""},{"name":"MOTTA","team":"Lazio","role":"P","pma":1.3,"pfc":0.5,"tit":20,"comment":"Lo scorso anno a un certo punto si è ritrovato titolare inaspettatamente e non ha sfigurato. In questa stagione però tornerà a essere il vince. Magari nel corso della stagione la gerarchia potrebbe cambiare, per questo se prendete Mandas prendete anche lui."},{"name":"BIJLOW","team":"Genoa","role":"P","pma":11.6,"pfc":18.55,"tit":91,"comment":"Si è dimostrato un portiere affidabile e su cui De Rossi ripone grande fiducia. In rosa può farvi comodo."},{"name":"BOGA","team":"Juventus","role":"A","pma":11.75,"pfc":21.75,"tit":76,"comment":""},{"name":"ELPHEGE","team":"Parma","role":"A","pma":2.55,"pfc":10.55,"tit":80,"comment":"È arrivato a gennaio e in pochi sapevano chi fosse. Il ragazzo si è messo a disposizione e si è fatto trovare pronto segnando anche gol importanti. Quest'anno avrà più spazio. Come quinto/sesto slot è un acquisto sensato."},{"name":"AMORIM","team":"Genoa","role":"C","pma":1.2,"pfc":0.5,"tit":86,"comment":"Quest'anno, dopo sei mesi di ambientamento, crediamo che sarà un titolare nel centrocampo del Genoa. Play maker dai piedi buoni e che può portare anche qualche bonus. Ottimo acquisto se fatto a cifre basse. Scommessa."},{"name":"KULENOVIC","team":"Torino","role":"A","pma":1.2,"pfc":3.7,"tit":74,"comment":""},{"name":"PRZYBOREK","team":"Lazio","role":"C","pma":2,"pfc":0.5,"tit":54,"comment":""},{"name":"SANTOS A.","team":"Napoli","role":"A","pma":38.2,"pfc":43.2,"tit":88,"comment":"Ha dimostrato di poter incidere positivamente in Serie A, tanto che il Napoli ha deciso di riscattarlo. Dribbling, velocità e vede la porta. Tutte caratteristiche che Allegri ama nei suoi giocatori d'attacco. Ci sarà da capire quanto sarà disponibile alla fase difensiva. In ogni caso sarà spesso in ballottaggio vista la quantità di esterni presenti nella rosa."},{"name":"BAKOLA","team":"Sassuolo","role":"C","pma":2.5,"pfc":0.5,"tit":83,"comment":""},{"name":"CARBONI F.","team":"Parma","role":"D","pma":1,"pfc":0.5,"tit":52,"comment":""},{"name":"LAHDO","team":"Como","role":"C","pma":0.95,"pfc":0.5,"tit":46,"comment":""},{"name":"SIVIERO","team":"Torino","role":"P","pma":0.95,"pfc":0.5,"tit":37,"comment":""},{"name":"MENDY P.","team":"Cagliari","role":"A","pma":3.8,"pfc":18.95,"tit":86,"comment":""},{"name":"RAMOS G.","team":"Milan","role":"A","pma":160.1,"pfc":139.75,"tit":92,"comment":"È un giocatore di caratura internazionale. Purtroppo le ultime stagioni le ha giocate all'ombra di grandissimi campioni, ma quando è stato chiamato in causa ha sempre risposto presente. Ora l'occasione di essere il titolare. Il Milan lo ha voluto fortemente così come Amorim. Se riuscirà presto ad ambientarsi in Serie A, allora saremmo difronte a un possibile colpo Top."},{"name":"YEBOAH J.","team":"Venezia","role":"A","pma":14.1,"pfc":26.25,"tit":92,"comment":"Ci piace tanto e crediamo riuscirà a fare la differenza anche in Serie A. Giocatore veramente di grandissima qualità e intelligenza calcistica. Non chiamiamolo scommessa, è una certezza. Vorremmo dirvi semitop, ma per la squadra in cui gioca dobbiamo tenerci su una fascia più bassa. Dateci retta, va preso."},{"name":"GHEDJEMIS","team":"Frosinone","role":"A","pma":5.05,"pfc":0.5,"tit":52,"comment":"Il vero trascinatore della promozione: 15 gol e diversi assist. Mancino naturale, predilige partire largo a destra per rientrare sul piede forte. È un dribblomane puro, rapidissimo negli spazi stretti, con una conduzione di palla molto pulita e un gran numero di tocchi in pochi metri. Ama l’uno contro uno, accelera e cerca costantemente la conclusione. Non è un semplice assist-man: attacca l’area con continuità e ha un fiuto del gol fuori."},{"name":"RAIMONDO","team":"Frosinone","role":"A","pma":13.3,"pfc":17.15,"tit":88,"comment":"Veloce, ama attaccare lo spazio alle spalle dei centrali e non ama particolarmente giocare spalle alla porta. Ha un ottimo senso della posizione in area, è efficace di testa e di piede, e ha mostrato una grande capacità realizzativa (11 gol nella stagione della promozione)."},{"name":"CALÒ","team":"Frosinone","role":"C","pma":11.3,"pfc":9.75,"tit":88,"comment":"Nella stagione 2025-26 è stato decisivo sia in fase di costruzione che in inserimento (numeri da top: tanti gol + moltissimi assist). Ha grande visione di gioco, qualità nei passaggi progressivi e capacità di arrivare al tiro da fuori o di inserirsi."},{"name":"ADORANTE","team":"Venezia","role":"A","pma":1.3,"pfc":0.5,"tit":48,"comment":""},{"name":"STANKOVIC F.","team":"Venezia","role":"P","pma":5.05,"pfc":8,"tit":91,"comment":"Portiere reattivo e moderno. Figlio d’arte, ha buon gioco con i piedi, presenza in area e capacità di costruire dal basso. È il punto fermo tra i pali e uno dei valori più solidi della rosa."},{"name":"THIAM","team":"Monza","role":"P","pma":2.05,"pfc":0.5,"tit":73,"comment":""},{"name":"RRAHMANI AL.","team":"Venezia","role":"A","pma":1.65,"pfc":12.5,"tit":78,"comment":"Attaccante molto rapido e dotato di ottimo fiuto del gol. Nelle gerarchie però parte dietro ad Adams, quindi si può prendere come sua riserva a 1 credito o come scommessa sempre a 1 credito."},{"name":"CACCIAMANI","team":"Torino","role":"C","pma":6.15,"pfc":6.85,"tit":90,"comment":""},{"name":"PESSINA","team":"Monza","role":"C","pma":2.2,"pfc":1.25,"tit":75,"comment":"Ha buona visione di gioco, tecnica pulita e capacità di leggere gli spazi tra le linee. È una “mezzala moderna” che unisce inserimenti offensivi, lavoro difensivo e personalità. Nel Monza è il capitano e leader, come giocatore affidabile da quinto/sesto slot si può prendere."},{"name":"BUSIO","team":"Venezia","role":"C","pma":5.2,"pfc":11.8,"tit":92,"comment":"Il motore del centrocampo. Dinamico, tecnico e con buon senso del gol. Inserisce, recupera e contribuisce in entrambe le fasi: uno dei più completi della mediana. Come sesto/settimo slot può essere valido."},{"name":"PALMISANI","team":"Frosinone","role":"P","pma":2.65,"pfc":2.6,"tit":86,"comment":""},{"name":"KAIKI","team":"Como","role":"D","pma":7,"pfc":9.7,"tit":88,"comment":"Fabregas lo aveva cercato anche a gennaio, ma il Cruzeiro bloccò il suo trasferimento. In questa sessione estiva il Como è tornato subito all'attacco per acquistarlo, segno che l'allenatore ci crede molto. Crediamo che sarà lui il titolare come terzino sinistro. Non è un goleador, ma ha grande propensione offensiva e sforna tanti cross. I +1 sono nelle sue corde."},{"name":"MUTANDWA","team":"Cagliari","role":"A","pma":1.05,"pfc":6.8,"tit":52,"comment":""},{"name":"COLPANI","team":"Monza","role":"C","pma":8.7,"pfc":6.6,"tit":88,"comment":""},{"name":"HAVEL","team":"Genoa","role":"A","pma":1.25,"pfc":11.2,"tit":64,"comment":""},{"name":"DRAGUSIN","team":"Fiorentina","role":"D","pma":10.7,"pfc":11.1,"tit":84,"comment":"Sarà uno dei due titolari nei centrali di difesa della Fiorentina. In Serie A ha già dimostrato di poter dire la sua e di poter anche portare bonus sugli sviluppi da calcio piazzato."},{"name":"MEICHTRY","team":"Genoa","role":"C","pma":1.6,"pfc":0.5,"tit":74,"comment":"Ci intriga parecchio. Nella passata stagione in Svizzera ha totalizzato 6 reti. Grandi doti fisiche e capacità d'inserimento. Non parte avanti nelle gerarchie, ma crediamo che potrà ritagliarsi il suo spazio."},{"name":"STANKOVIC A.","team":"Inter","role":"C","pma":1.85,"pfc":0.5,"tit":70,"comment":""},{"name":"KOUTSOUPIAS","team":"Frosinone","role":"C","pma":1.2,"pfc":0.5,"tit":76,"comment":""},{"name":"KVERNADZE","team":"Frosinone","role":"A","pma":7.75,"pfc":16.3,"tit":88,"comment":"Buona velocità e capacità di 1vs1, sa sia stare largo che accentrarsi. Ha un buon tiro e capacità di creare superiorità numerica. Nella stagione della promozione ha dimostrato di saper essere decisivo sia in fase di finalizzazione che di assist."},{"name":"MOTA","team":"Monza","role":"A","pma":3,"pfc":0.5,"tit":60,"comment":"Versatile, può giocare da seconda punta, esterno o trequartista. Veloce, tecnico nello stretto e abile nell’uno contro uno. Ha buon dribbling, capacità di creare e anche di finalizzare. Non è un pure centravanti, ma un attaccante moderno che si muove tanto, pressa e lega il gioco. Spesso decisivo nelle azioni di qualità. In Serie A ha già dimostrato di poter fare il suo."},{"name":"UNAI GOMEZ","team":"Udinese","role":"C","pma":2.75,"pfc":0.5,"tit":70,"comment":"Centrocampista moderno e molto duttile, cresciuto nell’Athletic Bilbao. Può giocare praticamente in tutte le zone del centrocampo: da trequartista, mezzala e anche mediano. È un profilo “moderno” che unisce qualità spagnola e carattere. All’Udinese può essere utile sia per dare equilibrio che per produrre gioco tra le linee. Lui stesso ha detto di voler migliorare nella finalizzazione, perché finora ha prodotto più corsa e lavoro che gol. Può essere una buona scommessa da sesto/settimo slot."},{"name":"COLOMBO L.","team":"Monza","role":"C","pma":1.3,"pfc":0.5,"tit":73,"comment":""},{"name":"GELLI F.","team":"Frosinone","role":"C","pma":1.2,"pfc":0.5,"tit":52,"comment":""},{"name":"CHAKVETADZE","team":"Udinese","role":"C","pma":1.05,"pfc":0.5,"tit":61,"comment":"Trequartista/mezzala offensiva (o esterno sinistro) di qualità, arrivato definitivamente dal Watford. Scommessa da quinto/sesto slot."},{"name":"CICHELLA","team":"Frosinone","role":"C","pma":1.15,"pfc":0.5,"tit":88,"comment":""},{"name":"HAPS","team":"Venezia","role":"D","pma":2.95,"pfc":0.5,"tit":76,"comment":""},{"name":"PEDRAZA","team":"Lazio","role":"D","pma":3.2,"pfc":2.2,"tit":88,"comment":""},{"name":"BIRINDELLI","team":"Monza","role":"D","pma":2.75,"pfc":0.5,"tit":90,"comment":"Veloce, dinamico e abile nei cross. Ha buona tecnica di base e sa sovrapporsi con continuità. Aggressivo e resistente, è uno dei giocatori più propositivi della fascia destra. Come giocatore da ultimi slot può essere preso. Ricordandovi sempre chi il Monza lotterà per non retrocedere."},{"name":"BRACAGLIA","team":"Frosinone","role":"D","pma":2.75,"pfc":0.5,"tit":88,"comment":""},{"name":"MILLA","team":"Como","role":"C","pma":5.5,"pfc":0.5,"tit":84,"comment":"Sulla carta è il sostituto di Perrone. Con i tanti impegni del Como potrebbe avere spazio, ma non è un giocatore da bonus. Potete fare altre scelte. Evitabile."},{"name":"OYONO A.","team":"Frosinone","role":"D","pma":1.45,"pfc":0.5,"tit":88,"comment":""},{"name":"CARBONI A.","team":"Monza","role":"D","pma":1.35,"pfc":0.5,"tit":88,"comment":"Centrale solido e duttile, bravo nei duelli e nella costruzione."},{"name":"BAKOUNE","team":"Monza","role":"D","pma":1.05,"pfc":0.5,"tit":72,"comment":""},{"name":"LAUBERBACH","team":"Venezia","role":"A","pma":0.85,"pfc":0.5,"tit":52,"comment":""},{"name":"VIERY","team":"Fiorentina","role":"D","pma":2.9,"pfc":7.5,"tit":92,"comment":"Difensore centrale o terzino sinistro classe 2005, brasiliano e con un ottimo mancino. Uno dei prospetti più interessanti del Brasile e Paratici ha deciso di acquistarlo per 15 milioni di euro. La sua duttilità lo porterà a essere molto utilizzato. Scommessa."},{"name":"FRANJIC","team":"Venezia","role":"D","pma":1.05,"pfc":0.5,"tit":75,"comment":""},{"name":"CALVANI","team":"Frosinone","role":"D","pma":1.3,"pfc":0.5,"tit":88,"comment":""},{"name":"EL AZZOUZI O.","team":"Bologna","role":"C","pma":1.2,"pfc":0.5,"tit":79,"comment":""},{"name":"MONTERISI","team":"Frosinone","role":"D","pma":2.85,"pfc":0.5,"tit":92,"comment":"Alto (190 cm), dominante nei duelli aerei e solido nei contrasti. Sa costruire dal basso con una certa qualità e non è solo un “distruttore”. Ha migliorato molto nella lettura delle situazioni e nella gestione della palla sotto pressione. Ottimo difensore Low cost."},{"name":"ROMANO","team":"Cagliari","role":"C","pma":3.5,"pfc":0.5,"tit":92,"comment":"Pisacane punta su di lui nonostante la giovane età. Qualità e carattere. Può giocare sia al centro che da mezzala. Sommessa perfetta da 6/7 slot."},{"name":"GRANDI","team":"Venezia","role":"P","pma":0.95,"pfc":0.5,"tit":10,"comment":""},{"name":"SCHINGTIENNE","team":"Venezia","role":"D","pma":1.3,"pfc":0.5,"tit":92,"comment":""},{"name":"CITTADINI","team":"Frosinone","role":"D","pma":1.05,"pfc":0.5,"tit":86,"comment":""},{"name":"ABANKWAH","team":"Udinese","role":"D","pma":1.4,"pfc":0.5,"tit":68,"comment":""},{"name":"MARIN R.","team":"Napoli","role":"D","pma":1.95,"pfc":0.5,"tit":68,"comment":""},{"name":"CIURRIA","team":"Monza","role":"C","pma":1.1,"pfc":0.5,"tit":64,"comment":"Esterno/trequartista esperto, dinamico e capace di contribuire in entrambe le fasi."},{"name":"PUCZKA","team":"Genoa","role":"D","pma":1.25,"pfc":0.5,"tit":53,"comment":""},{"name":"DAGASSO","team":"Venezia","role":"C","pma":0.95,"pfc":0.5,"tit":52,"comment":""},{"name":"HASA","team":"Frosinone","role":"C","pma":1.05,"pfc":0.5,"tit":70,"comment":""},{"name":"LOLIC","team":"Frosinone","role":"P","pma":0.95,"pfc":0.5,"tit":10,"comment":""},{"name":"LISMAN","team":"Venezia","role":"A","pma":1.05,"pfc":0.5,"tit":53,"comment":""},{"name":"STRAJNAR","team":"Monza","role":"P","pma":0.9,"pfc":0.5,"tit":10,"comment":""},{"name":"SAGRADO","team":"Venezia","role":"D","pma":1.45,"pfc":0.5,"tit":76,"comment":""},{"name":"DUNCAN","team":"Venezia","role":"C","pma":1.15,"pfc":0.5,"tit":56,"comment":""},{"name":"DAFFARA","team":"Parma","role":"P","pma":2.75,"pfc":0.5,"tit":20,"comment":"Portiere di buone qualità ma rimane il secondo per ora."},{"name":"KONE B.","team":"Frosinone","role":"C","pma":1,"pfc":0.5,"tit":52,"comment":""},{"name":"ANTOV","team":"Monza","role":"D","pma":0.95,"pfc":0.5,"tit":52,"comment":""},{"name":"AMEY","team":"Frosinone","role":"D","pma":1.05,"pfc":0.5,"tit":52,"comment":""},{"name":"LUCCHESI","team":"Monza","role":"D","pma":1.1,"pfc":0.5,"tit":86,"comment":""},{"name":"GOMES","team":"Venezia","role":"D","pma":0.9,"pfc":0.5,"tit":52,"comment":""},{"name":"SVERKO","team":"Venezia","role":"D","pma":1.35,"pfc":0.5,"tit":45,"comment":""},{"name":"CORREIA T.","team":"Venezia","role":"D","pma":2,"pfc":0.5,"tit":88,"comment":""},{"name":"RENZETTI","team":"Lazio","role":"P","pma":0.95,"pfc":0.5,"tit":10,"comment":""},{"name":"MORENO M.","team":"Venezia","role":"D","pma":1.3,"pfc":0.5,"tit":55,"comment":""},{"name":"PIANA","team":"Udinese","role":"P","pma":0.9,"pfc":0.5,"tit":10,"comment":""},{"name":"STOLZ","team":"Genoa","role":"P","pma":0.9,"pfc":0.5,"tit":20,"comment":""},{"name":"POZZI","team":"Venezia","role":"P","pma":0.9,"pfc":0.5,"tit":37,"comment":""},{"name":"TRAORÈ HJ.","team":"Genoa","role":"C","pma":1.6,"pfc":2.3,"tit":76,"comment":""},{"name":"STONES","team":"Inter","role":"D","pma":16.35,"pfc":11.05,"tit":84,"comment":""},{"name":"MANGAS","team":"Monza","role":"D","pma":5.6,"pfc":0.95,"tit":92,"comment":""},{"name":"DOEKHI","team":"Lazio","role":"D","pma":6.45,"pfc":8.6,"tit":92,"comment":"Bisogna dire che lui potrebbe essere veramente un acquisto perfetto all'asta. Sarà titolare, verrà pagato discretamente poco e ha una propensione al bonus altissima. Nella passata stagione è stato il difensore più prolifico nei top 5 campionati Europei. Scommessa intrigantissima."},{"name":"PEREZ K.","team":"Venezia","role":"C","pma":1.35,"pfc":0.5,"tit":88,"comment":"Mezzala creativa e di qualità. Buona visione di gioco, capacità di creare e arrivare in zona gol. È uno dei profili più tecnici del reparto. Non sarà titolare fisso, per questo nonostante le ottime caratteristiche vi consigliamo di fare altre scelte."},{"name":"ADAMS A.","team":"Venezia","role":"A","pma":22.4,"pfc":25.8,"tit":92,"comment":"Non è un attaccante di fantasia o che lega particolarmente il gioco: preferisce attaccare la porta piuttosto che venire incontro. Rende particolarmente bene in sistemi verticali e basati sulle ripartenze. Si definisce lui stesso un \"classico numero 9\". Negli anni ha dimostrato di avere fiuto del gol e crediamo che insieme a Yeboah farà molto bene. Terzo/quarto slot."},{"name":"VARELA G.","team":"Monza","role":"A","pma":16.9,"pfc":22.55,"tit":83,"comment":"È lui l'attaccante titolare del Monza. Ha un buon fiuto del gol e può essere ottimo per completare il vostro reparto offensivo. Il Monza non crea tantissimo, ma lui è uno che sa sfruttare le occasioni."},{"name":"WINKS","team":"Cagliari","role":"C","pma":1.45,"pfc":0.5,"tit":78,"comment":"Dopo anni di militanza tra Premier e Championship arriva al Cagliari e porta esperienza in mediana. Da lui non troverete bonus, più facile qualche malus. Si possono fare altre scelte. Evitabile."},{"name":"OULAI","team":"Fiorentina","role":"C","pma":2.85,"pfc":5.5,"tit":80,"comment":"Acquisto importante a livello economico e in prospettiva. Oulai gioca centrale e nel centrocampo a 3 di Grosso si giocherà una maglia con Fagioli. I due hanno caratteristiche differenti. Fagioli ha più qualità nel passaggio, lui invece grande forza fisica ed è capace a ribaltare con velocità le azioni da difensive in offensive."},{"name":"DESPLANCHES","team":"Frosinone","role":"P","pma":1.05,"pfc":0.5,"tit":20,"comment":""},{"name":"MASCARDI","team":"Torino","role":"P","pma":1.75,"pfc":0.5,"tit":20,"comment":""},{"name":"HAPPONEN","team":"Bologna","role":"P","pma":0.95,"pfc":0.5,"tit":10,"comment":""},{"name":"ALHASSANE","team":"Bologna","role":"D","pma":1.2,"pfc":0.5,"tit":84,"comment":""},{"name":"DE MARZI","team":"Roma","role":"P","pma":0.9,"pfc":0.5,"tit":10,"comment":""},{"name":"KOFLER","team":"Cagliari","role":"D","pma":1.1,"pfc":0.5,"tit":52,"comment":""},{"name":"COMERT","team":"Torino","role":"D","pma":1.55,"pfc":0.8,"tit":90,"comment":""},{"name":"AMONDARAIN","team":"Bologna","role":"C","pma":1.45,"pfc":0.5,"tit":68,"comment":""},{"name":"FITZ-JIM","team":"Torino","role":"C","pma":2.85,"pfc":4.05,"tit":84,"comment":""},{"name":"EL AZZOUZI A.","team":"Frosinone","role":"C","pma":0.95,"pfc":0.5,"tit":52,"comment":""},{"name":"KOLO MUANI","team":"Juventus","role":"A","pma":124.6,"pfc":122.4,"tit":90,"comment":"Finalmente la Juventus è riuscita a riprendere Kolo Muani. Il giocatore non vedeva l'ora di tornare e noi di riaverlo al fantacalcio. Con la speranza che riesca a riscattare l'ultima stagione negativa in premier."},{"name":"ALAJBEGOVIC","team":"Juventus","role":"C","pma":30.2,"pfc":41.35,"tit":86,"comment":"Giocatore di grandissimo talento e prospettiva. La Juventus ha deciso di puntarci per il presente e il futuro. Avrà tanto spazio nonostante la giovane età. Listato centrocampista è da considerarsi un Semitop."},{"name":"BOWIE","team":"Sassuolo","role":"A","pma":15.9,"pfc":27.3,"tit":88,"comment":"Lo scorso anno ha dimostrato di poterci stare benissimo in Serie A. Nel Sassuolo crediamo possa fare bene."},{"name":"VALDEPENAS","team":"Fiorentina","role":"D","pma":11,"pfc":9.4,"tit":90,"comment":""},{"name":"GEUBBELS","team":"Lecce","role":"A","pma":10.4,"pfc":21.95,"tit":83,"comment":""},{"name":"AKINSANMIRO","team":"Monza","role":"C","pma":1.4,"pfc":0.5,"tit":88,"comment":"Lo scorso anno ha fatto intravedere le sue qualità nel Pisa. Il Monza ha deciso di acquistarlo dall'Inter e crediamo che ha fatto bene. Non un giocatore da tanti bonus, ma qualcuno potrebbe portarvelo. Centrocampista da ultimi slot per completare il reparto."},{"name":"DIALLO O.","team":"Parma","role":"C","pma":1.1,"pfc":0.5,"tit":78,"comment":""},{"name":"PAVARD","team":"Inter","role":"D","pma":3.05,"pfc":0.5,"tit":60,"comment":""},{"name":"KOULIERAKIS","team":"Roma","role":"D","pma":6.25,"pfc":3.1,"tit":76,"comment":""},{"name":"SOW","team":"Genoa","role":"C","pma":2.05,"pfc":0.5,"tit":90,"comment":""},{"name":"COUTO","team":"Como","role":"D","pma":16.7,"pfc":16.15,"tit":92,"comment":"In carriera ha giocato in diversi club importanti, ha fatto anche vedere ottime cose e crediamo che ora con Fabregas sboccerà definitivamente. Su quella fascia il posto è il suo e crediamo che possa portare diversi bonus."},{"name":"AKPOGUMA","team":"Frosinone","role":"D","pma":1.2,"pfc":0.5,"tit":72,"comment":""},{"name":"MITAJ","team":"Genoa","role":"D","pma":1.9,"pfc":0.5,"tit":78,"comment":"Sarà lui il titolare sull'out di sinistra. Può essere un buon acquisto come 4/5 slot. Batte anche qualche calcio piazzato e questo può risultare interessante."},{"name":"SATALINO","team":"Sassuolo","role":"P","pma":0.85,"pfc":0.5,"tit":45,"comment":""},{"name":"HALHAL","team":"Venezia","role":"D","pma":1.25,"pfc":0.5,"tit":52,"comment":""},{"name":"TOURÈ E.","team":"Parma","role":"A","pma":17.85,"pfc":25.2,"tit":90,"comment":""},{"name":"MASTANTUONO","team":"Fiorentina","role":"C","pma":40.6,"pfc":43.35,"tit":92,"comment":"Classe cristallina, eleganza pura. Vuole dimostrare che il Real Madrid lo scorso anno non ha sbagliato a puntare su di lui. Firenze potrebbe essere la piazza perfetta per il suo rilancio."},{"name":"ROBINSON J.","team":"Monza","role":"A","pma":1.25,"pfc":0.5,"tit":54,"comment":""},{"name":"PELLEGRINI LO.","team":"Roma","role":"C","pma":2.4,"pfc":0.5,"tit":74,"comment":""},{"name":"CHALOBAH T.","team":"Como","role":"D","pma":20.25,"pfc":30.95,"tit":92,"comment":"Il Como per lui ha fatto un grande investimento per aumentare il livello della difesa. Sarà lui il titolare e venendo dalla Premier crediamo possa fare molto bene in Serie A."},{"name":"KEVIN CARLOS","team":"Cagliari","role":"A","pma":10.3,"pfc":8.2,"tit":76,"comment":""},{"name":"AURELIO","team":"Cagliari","role":"D","pma":1,"pfc":0.5,"tit":74,"comment":""},{"name":"MOLINA N.","team":"Roma","role":"D","pma":35.3,"pfc":46.95,"tit":90,"comment":"Crediamo che sia perfetto per le caratteristiche di gioco della Roma. Porta esperienza, qualità e crediamo anche qualche bonus."},{"name":"SCHMID","team":"Frosinone","role":"C","pma":3.75,"pfc":6.45,"tit":92,"comment":"Centrocampista offensivo dotato di ottima tecnica. Uomo assist più che uomo gol, ma potrebbe essere una scommessa low cost molto interessante."},{"name":"GRILLITSCH","team":"Frosinone","role":"C","pma":1.3,"pfc":0.5,"tit":80,"comment":""},{"name":"PENEV","team":"Lecce","role":"P","pma":0.85,"pfc":0.5,"tit":20,"comment":""},{"name":"OBRADOR","team":"Sassuolo","role":"D","pma":3.5,"pfc":3.2,"tit":86,"comment":""},{"name":"ROMERO D.","team":"Parma","role":"A","pma":13.25,"pfc":20.45,"tit":90,"comment":""},{"name":"TERZIC","team":"Frosinone","role":"D","pma":1.35,"pfc":0.5,"tit":76,"comment":""},{"name":"SPENCE","team":"Inter","role":"D","pma":23.85,"pfc":38.65,"tit":90,"comment":"Finalmente l'Inter ha trovato il suo nuovo esterno destro. Caratteristiche molto diverse rispetto a Dumfries, ma giocando titolare nell'Inter, giocando da quinto ed essendo listato difensore non può che essere un Semitop."},{"name":"RADUNOVIC","team":"Cagliari","role":"P","pma":0.9,"pfc":0.5,"tit":10,"comment":""},{"name":"PISSERI","team":"Frosinone","role":"P","pma":0.85,"pfc":0.5,"tit":45,"comment":""},{"name":"MILIK","team":"Juventus","role":"A","pma":1.4,"pfc":0.5,"tit":51,"comment":""},{"name":"CISSÈ A.","team":"Milan","role":"C","pma":10.55,"pfc":0.5,"tit":61,"comment":"Amorim punta su di lui. Probabilmente non sarà un titolare inamovibile vista la giovane età, ma come scommessa da avere in rosa può essere un buon colpo. Listato come centrocampista, gioca dietro la punta, perfetto per il fanta."},{"name":"LONTANI","team":"Parma","role":"A","pma":2.6,"pfc":0.5,"tit":68,"comment":""},{"name":"FORSON O.","team":"Monza","role":"C","pma":1.1,"pfc":0.5,"tit":54,"comment":""},{"name":"VICARIO","team":"Juventus","role":"P","pma":54.3,"pfc":42.15,"tit":91,"comment":"La Juventus ha finalmente il suo titolare in porta. Dopo una stagione particolare con il Totthenam è pronto a rimettersi in gioco e a dimostrare di essere un portiere importante. Semitop."},{"name":"MORA","team":"Roma","role":"C","pma":47.35,"pfc":40.65,"tit":86,"comment":"Occhio all'hype intorno al nome, perché è giovanissimo e anche nel Porto non sempre era titolare. Talento  importante senza dubbio, ma al Fantacalcio trattatelo come scommessa."},{"name":"FAVASULI","team":"Napoli","role":"D","pma":1.45,"pfc":0.5,"tit":64,"comment":""},{"name":"DE MARTIS","team":"Parma","role":"A","pma":0.85,"pfc":0.5,"tit":48,"comment":""},{"name":"MONTIPÒ","team":"Venezia","role":"P","pma":1.1,"pfc":0.5,"tit":20,"comment":""},{"name":"MOREIRA","team":"Milan","role":"C","pma":23.6,"pfc":27.2,"tit":88,"comment":""},{"name":"BLEVE","team":"Lecce","role":"P","pma":0.9,"pfc":0.5,"tit":10,"comment":""},{"name":"OMAR FAYED","team":"Frosinone","role":"D","pma":0.95,"pfc":0.5,"tit":60,"comment":""},{"name":"ODENTHAL","team":"Sassuolo","role":"D","pma":1.5,"pfc":0.5,"tit":60,"comment":""},{"name":"FORTINI","team":"Torino","role":"D","pma":2.35,"pfc":0.5,"tit":75,"comment":""},{"name":"COMOTTO","team":"Milan","role":"C","pma":1.1,"pfc":0.5,"tit":52,"comment":""},{"name":"LAERKE","team":"Lecce","role":"C","pma":0.95,"pfc":0.5,"tit":52,"comment":""},{"name":"TOURÈ I.","team":"Monza","role":"C","pma":1.2,"pfc":0.5,"tit":86,"comment":""},{"name":"JONES C.","team":"Inter","role":"C","pma":19.9,"pfc":27.05,"tit":90,"comment":"Acquisto voluto fortemente da tutto l'ambiente. Arriva all'Inter per essere il titolare e portare ulteriore qualità nel centrocampo dei nerazzurri. Secondo slot perfetto."},{"name":"LEYSEN F.","team":"Sassuolo","role":"D","pma":1.4,"pfc":4.2,"tit":88,"comment":""},{"name":"CINQUEGRANO","team":"Sassuolo","role":"D","pma":1.6,"pfc":0.5,"tit":81,"comment":""},{"name":"TERRACCIANO F.","team":"Milan","role":"D","pma":1.35,"pfc":0.5,"tit":68,"comment":""},{"name":"ELMAS","team":"Atalanta","role":"C","pma":3.2,"pfc":0.5,"tit":72,"comment":"Un jolly perfetto per la Dea. Giocatore di grande duttilità, abituato a portare qualità a partita in corso. Non parte come un titolare certo, ma può comunque essere una pedina interessante da avere in rosa."},{"name":"BADIASHILE","team":"Napoli","role":"D","pma":5.9,"pfc":1.35,"tit":80,"comment":""},{"name":"SUTALO J.","team":"Lazio","role":"D","pma":2.95,"pfc":3.2,"tit":88,"comment":"Arriva alla Lazio per essere il titolare. Difensore roccioso, bravo sulle palle alte. A pochissimi crediti può essere un buon acquisto da avere in rosa."},{"name":"OSMAJIC","team":"Genoa","role":"A","pma":1.95,"pfc":12.5,"tit":78,"comment":""},{"name":"FINI","team":"Frosinone","role":"C","pma":1.25,"pfc":0.5,"tit":84,"comment":""},{"name":"DIAWARA S.","team":"Milan","role":"D","pma":1,"pfc":0.5,"tit":52,"comment":""},{"name":"GRABARA","team":"Juventus","role":"P","pma":1.9,"pfc":0.5,"tit":20,"comment":""},{"name":"KAMBWALA","team":"Como","role":"D","pma":0.9,"pfc":0.5,"tit":76,"comment":""},{"name":"LULLI","team":"Roma","role":"D","pma":3.55,"pfc":0.5,"tit":64,"comment":"A Gasperini piace lanciare i giovani e lui ha già esordito quest'anno. Sarà la prima alternativa a Molina e in alcune occasioni anche il titolare. Scommessina intrigante."},{"name":"FATAH","team":"Lecce","role":"A","pma":1.1,"pfc":9.6,"tit":75,"comment":""},{"name":"DI GENNARO","team":"Inter","role":"P","pma":0.9,"pfc":0.5,"tit":10,"comment":""},{"name":"MOUT","team":"Monza","role":"C","pma":1.05,"pfc":0.5,"tit":64,"comment":""},{"name":"FOE ONDOA","team":"Monza","role":"C","pma":0.9,"pfc":0.5,"tit":60,"comment":""},{"name":"MAYE","team":"Monza","role":"D","pma":1,"pfc":0.5,"tit":60,"comment":""},{"name":"TCHATO","team":"Frosinone","role":"D","pma":1.05,"pfc":0.5,"tit":76,"comment":""},{"name":"BOBCEK","team":"Frosinone","role":"A","pma":3.3,"pfc":18.4,"tit":84,"comment":""},{"name":"NGONGE","team":"Monza","role":"A","pma":3.3,"pfc":15.35,"tit":88,"comment":"Sono abbastanza lontani i giorni in cui ci fece innamorare di lui, ma in una squadra come il Monza avrà spazio per provare a rilanciarsi. Scommessa da ultimo slot."},{"name":"MROZEK","team":"Udinese","role":"P","pma":0.9,"pfc":0.5,"tit":46,"comment":""},{"name":"BIRLIGEA","team":"Frosinone","role":"A","pma":1.05,"pfc":0.5,"tit":50,"comment":""},{"name":"PERRI","team":"Torino","role":"P","pma":6.3,"pfc":16.25,"tit":91,"comment":"Il Torino ha finalmente il suo portiere titolare. State però attenti, perché il Toro concede abbastanza e lui potrebbe subire diversi malus."},{"name":"GONZALEZ N.","team":"Juventus","role":"C","pma":16.25,"pfc":16.15,"tit":75,"comment":"Nico rimane alla Juventus e aldilà di tutto sappiamo che è un giocatore importante. Forse Spalletti riuscirà a rilanciarlo. Scommessa."},{"name":"KESSIÈ","team":"Atalanta","role":"C","pma":20.05,"pfc":22.05,"tit":88,"comment":"Il \"Presidente\" torna nel club che lo ha lanciato al grande pubblico. Torna in A dopo molto tempo e ci sarà da capire se è ancora il giocatore che abbiamo conosciuto dopo aver trascorso 4 anni in Arabia."},{"name":"CIERVO","team":"Cagliari","role":"C","pma":0.95,"pfc":0.5,"tit":60,"comment":""},{"name":"DROBNIC","team":"Parma","role":"D","pma":0.95,"pfc":0.5,"tit":64,"comment":""},{"name":"BALERDI","team":"Roma","role":"D","pma":2,"pfc":0.5,"tit":60,"comment":""},{"name":"THEATE","team":"Bologna","role":"D","pma":5.45,"pfc":6.2,"tit":88,"comment":""},{"name":"DEMBELÈ A.","team":"Lecce","role":"D","pma":0.95,"pfc":0.5,"tit":52,"comment":""},{"name":"HUTCHINSON","team":"Milan","role":"C","pma":4.7,"pfc":11.4,"tit":80,"comment":"Potrebbe essere una bella scommessa. Amorim lo ha voluto e crede fortemente nelle sue qualità. Non è un giocatore che ci fa pensare di poter spendere molto per lui, ma potrebbe essere estremamente funzionale al gioco del Milan."},{"name":"BELGHALI","team":"Torino","role":"D","pma":5.25,"pfc":7.65,"tit":88,"comment":"Sarà lui il titolare sulla corsia di destra. Grande spinta e tanti cross da regalare al Cholito. Si può assolutamente prendere."},{"name":"MONTEIRO J.","team":"Lecce","role":"C","pma":1.55,"pfc":8.6,"tit":88,"comment":"Avrà spazio e qualcosina di buono potrebbe anche portarla in termini fantacalcistici. Giocatore offensivo, che crediamo alla lunga sarà il titolare."},{"name":"MASSOLIN","team":"Cagliari","role":"C","pma":1.35,"pfc":0.5,"tit":60,"comment":""},{"name":"CALETA-CAR","team":"Sassuolo","role":"D","pma":1.5,"pfc":0.5,"tit":86,"comment":""},{"name":"GAGLIARDINI","team":"Cagliari","role":"C","pma":0.85,"pfc":0.5,"tit":60,"comment":""},{"name":"JUAN JESUS","team":"Venezia","role":"D","pma":1.5,"pfc":0.5,"tit":88,"comment":"Porta esperienza importante per una squadra neopromossa. Come low cost da ultimi slot può tornarvi utile."},{"name":"BETO","team":"Fiorentina","role":"A","pma":43.3,"pfc":42.3,"tit":88,"comment":""},{"name":"MBANGULA","team":"Bologna","role":"C","pma":3.15,"pfc":10.6,"tit":84,"comment":""},{"name":"SARR P.","team":"Juventus","role":"C","pma":5.45,"pfc":9.3,"tit":88,"comment":""},{"name":"GHIDOTTI","team":"Parma","role":"P","pma":0.8,"pfc":0.5,"tit":45,"comment":""},{"name":"DIEGO CARLOS","team":"Parma","role":"D","pma":3.9,"pfc":0.5,"tit":92,"comment":"Sarà il titolare in questo Parma e crediamo possa fare molto bene. Titolare low cost che può regalarvi anche qualche bonus sugli sviluppi dei calci piazzati."},{"name":"SUGAWARA","team":"Cagliari","role":"D","pma":1.3,"pfc":0.5,"tit":64,"comment":""},{"name":"JOVANOVIC","team":"Udinese","role":"C","pma":0.95,"pfc":0.5,"tit":51,"comment":""},{"name":"ZEBALLOS","team":"Monza","role":"A","pma":3.55,"pfc":0.5,"tit":56,"comment":""},{"name":"WOLTEMADE","team":"Juventus","role":"A","pma":86,"pfc":62.55,"tit":86,"comment":"Arriva in prestito dal New Castle. Giocatore di caratura internazionale che deve riscattare una stagione con più ombre che luci. Si alternerà con Kolo, ma all'occorrenza potrebbero anche giocare insieme. Non spendete però cifre folli per lui."},{"name":"GNONTO","team":"Fiorentina","role":"A","pma":4.75,"pfc":7.05,"tit":76,"comment":""},{"name":"BRAGANCA","team":"Torino","role":"C","pma":1.1,"pfc":6.4,"tit":84,"comment":""},{"name":"PATTERSON","team":"Torino","role":"D","pma":1.7,"pfc":0.5,"tit":59,"comment":""},{"name":"DRAMEH","team":"Genoa","role":"D","pma":1.2,"pfc":4.95,"tit":88,"comment":""},{"name":"GOGLICHIDZE","team":"Monza","role":"D","pma":1.05,"pfc":0.5,"tit":52,"comment":""},{"name":"SANCHEZ RO.","team":"Como","role":"P","pma":4.65,"pfc":11.9,"tit":82,"comment":""},{"name":"GONCALVES P.","team":"Fiorentina","role":"C","pma":21.35,"pfc":26.7,"tit":90,"comment":"Giocatore che ci piace davvero tantissimo e che crediamo sarà il titolare sulla trequarti. Scommessa intrigante veramente. Potrebbe portarvi dei bonus importanti, ma molto dipenderà dalla Fiorentina."},{"name":"FERNANDEZ T.","team":"Venezia","role":"C","pma":1.35,"pfc":1,"tit":73,"comment":""},{"name":"NZOLA","team":"Cagliari","role":"A","pma":4.55,"pfc":16.2,"tit":84,"comment":""},{"name":"ROBINHO JUNIOR","team":"Genoa","role":"A","pma":1.3,"pfc":0.5,"tit":50,"comment":""}];
+const TEAMS = ["Atalanta", "Bologna", "Cagliari", "Como", "Fiorentina", "Frosinone", "Genoa", "Inter", "Juventus", "Lazio", "Lecce", "Milan", "Monza", "Napoli", "Parma", "Roma", "Sassuolo", "Torino", "Udinese", "Venezia"];
+
+</script>
+<script>
+(function(){
+  const SITE_PASSWORD = 'socmel';
+  const SESSION_KEY = 'listone_unlocked';
+
+  const lockScreen = document.getElementById('lockScreen');
+  const lockForm = document.getElementById('lockForm');
+  const lockInput = document.getElementById('lockInput');
+  const lockError = document.getElementById('lockError');
+
+  function unlock(){
+    document.body.classList.remove('locked');
+    lockScreen.style.display = 'none';
+  }
+
+  if(sessionStorage.getItem(SESSION_KEY) === '1'){
+    unlock();
+  }
+
+  lockForm.addEventListener('submit', function(e){
+    e.preventDefault();
+    if(lockInput.value === SITE_PASSWORD){
+      sessionStorage.setItem(SESSION_KEY, '1');
+      lockError.textContent = '';
+      unlock();
+    } else {
+      lockError.textContent = 'Password errata, riprova.';
+      lockInput.value = '';
+      lockInput.focus();
+    }
+  });
+})();
+</script>
+<script>
+(function(){
+  const state = {
+    team: 'ALL',
+    role: 'ALL',
+    search: '',
+    sortKey: 'pma',
+    sortDir: 'desc',
+    expanded: new Set()
+  };
+
+  function normalizeText(str){
+    return String(str)
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, ''); // strip accents, keep case-insensitivity robust
+  }
+
+  const teamGrid = document.getElementById('teamGrid');
+  const roleTabs = document.getElementById('roleTabs');
+  const searchInput = document.getElementById('searchInput');
+  const tableBody = document.getElementById('tableBody');
+  const countLabel = document.getElementById('countLabel');
+  const emptyState = document.getElementById('emptyState');
+  const theadRow = document.querySelector('thead tr');
+
+  // Build team chips
+  const allChip = document.createElement('button');
+  allChip.className = 'team-chip all-chip active';
+  allChip.textContent = 'Tutte';
+  allChip.dataset.team = 'ALL';
+  teamGrid.appendChild(allChip);
+
+  TEAMS.forEach(function(team){
+    const chip = document.createElement('button');
+    chip.className = 'team-chip';
+    chip.textContent = team;
+    chip.dataset.team = team;
+    teamGrid.appendChild(chip);
+  });
+
+  teamGrid.addEventListener('click', function(e){
+    const btn = e.target.closest('.team-chip');
+    if(!btn) return;
+    state.team = btn.dataset.team;
+    Array.from(teamGrid.children).forEach(function(c){ c.classList.remove('active'); });
+    btn.classList.add('active');
+    render();
+  });
+
+  roleTabs.addEventListener('click', function(e){
+    const btn = e.target.closest('.role-tab');
+    if(!btn) return;
+    state.role = btn.dataset.role;
+    Array.from(roleTabs.children).forEach(function(c){ c.classList.remove('active'); });
+    btn.classList.add('active');
+    render();
+  });
+
+  searchInput.addEventListener('input', function(e){
+    state.search = normalizeText(e.target.value.trim());
+    render();
+  });
+
+  tableBody.addEventListener('click', function(e){
+    const row = e.target.closest('tr.player-row.has-comment');
+    if(!row) return;
+    const rowId = row.dataset.rowId;
+    if(state.expanded.has(rowId)){
+      state.expanded.delete(rowId);
+    } else {
+      state.expanded.add(rowId);
+    }
+    render();
+  });
+
+  theadRow.addEventListener('click', function(e){
+    const th = e.target.closest('th');
+    if(!th) return;
+    const key = th.dataset.key;
+    if(!key) return;
+    if(state.sortKey === key){
+      state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+      state.sortKey = key;
+      state.sortDir = (key === 'name' || key === 'team' || key === 'role') ? 'asc' : 'desc';
+    }
+    updateSortArrows();
+    render();
+  });
+
+  function updateSortArrows(){
+    Array.from(theadRow.children).forEach(function(th){
+      const arrow = th.querySelector('.arrow');
+      if(!arrow) return;
+      if(th.dataset.key === state.sortKey){
+        arrow.textContent = state.sortDir === 'asc' ? '▲' : '▼';
+      } else {
+        arrow.textContent = '';
+      }
+    });
+  }
+
+  function getFiltered(){
+    return PLAYERS.filter(function(p){
+      if(state.team !== 'ALL' && p.team !== state.team) return false;
+      if(state.role !== 'ALL' && p.role !== state.role) return false;
+      if(state.search && normalizeText(p.name).indexOf(state.search) === -1) return false;
+      return true;
+    });
+  }
+
+  function getSorted(list){
+    const key = state.sortKey;
+    const dir = state.sortDir === 'asc' ? 1 : -1;
+    return list.slice().sort(function(a,b){
+      let va = a[key], vb = b[key];
+      if(va === null || va === undefined) va = (typeof vb === 'number') ? -Infinity : '';
+      if(vb === null || vb === undefined) vb = (typeof va === 'number') ? -Infinity : '';
+      if(typeof va === 'string'){
+        return va.localeCompare(vb) * dir;
+      }
+      return (va - vb) * dir;
+    });
+  }
+
+  function render(){
+    const filtered = getSorted(getFiltered());
+    countLabel.textContent = filtered.length + (filtered.length === 1 ? ' giocatore' : ' giocatori');
+
+    if(filtered.length === 0){
+      tableBody.innerHTML = '';
+      emptyState.style.display = 'block';
+      return;
+    }
+    emptyState.style.display = 'none';
+
+    const rows = filtered.map(function(p, idx){
+      const pma = (p.pma !== null && p.pma !== undefined) ? p.pma.toFixed(1) : '—';
+      const pfc = (p.pfc !== null && p.pfc !== undefined) ? p.pfc.toFixed(1) : '—';
+      const tit = (p.tit !== null && p.tit !== undefined) ? p.tit : null;
+      const titBar = tit !== null
+        ? '<div class="tit-bar-wrap"><div class="tit-bar"><div class="tit-bar-fill" style="width:' + tit + '%"></div></div><span class="tit-num">' + tit + '%</span></div>'
+        : '<div class="tit-bar-wrap"><span class="tit-num">—</span></div>';
+
+      const hasComment = !!(p.comment && p.comment.trim());
+      const rowId = p.name + '|' + p.team;
+      const isOpen = state.expanded.has(rowId);
+
+      const infoCell = hasComment
+        ? '<td class="info-cell"><button class="info-btn' + (isOpen ? ' open' : '') + '" type="button" aria-label="Mostra commento">+</button></td>'
+        : '<td class="info-cell"><span class="info-placeholder"></span></td>';
+
+      let html = '<tr class="player-row' + (hasComment ? ' has-comment' : '') + '" data-row-id="' + escapeHtml(rowId) + '">' +
+        '<td><span class="role-badge ' + p.role + '">' + p.role + '</span></td>' +
+        '<td class="player-name">' + escapeHtml(p.name) + '</td>' +
+        '<td class="team-name">' + escapeHtml(p.team) + '</td>' +
+        '<td class="num">' + pma + '</td>' +
+        '<td class="num">' + pfc + '</td>' +
+        '<td class="num">' + titBar + '</td>' +
+        infoCell +
+        '</tr>';
+
+      if(hasComment && isOpen){
+        html += '<tr class="detail-row"><td colspan="7">' +
+          '<div class="comment-box">' + escapeHtml(p.comment) + '</div>' +
+          '</td></tr>';
+      }
+      return html;
+    });
+    tableBody.innerHTML = rows.join('');
+  }
+
+  function escapeHtml(str){
+    return String(str).replace(/[&<>"']/g, function(ch){
+      return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[ch];
+    });
+  }
+
+  updateSortArrows();
+  render();
+})();
+</script>
+</body>
+</html>
